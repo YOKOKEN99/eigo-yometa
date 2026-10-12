@@ -80,8 +80,25 @@
   .ja{font-size:1.7rem; color:#b05a00; text-align:center; min-height:2.2rem; margin-top:6px; font-weight:700;}
   .btn.small.on{background:var(--y); color:#5a3d00;}
   .speaker.hint-pulse{animation:pulse 1s infinite;}
-  .confetti{position:fixed; top:-20px; font-size:2rem; animation:fall 1.6s linear forwards; pointer-events:none;}
+  .tbar{position:relative; height:26px; background:#eee3cc; border-radius:13px; margin:0 0 10px; overflow:hidden;}
+  .tfill{height:100%; width:100%; background:#06d6a0; transition:width .1s linear, background .3s;}
+  .tnum{position:absolute; left:0; right:0; top:0; text-align:center; line-height:26px; font-weight:800; color:#5a3d00;}
+  .confetti{position:fixed; top:-20px; font-size:2rem; animation:fall 1.6s linear forwards; pointer-events:none; z-index:50;}
   @keyframes fall{to{transform:translateY(110vh) rotate(360deg); opacity:.2}}
+  .dot.gold{background:#ffb703; box-shadow:0 0 6px #ffb703;}
+  .streak{font-size:1.2rem; font-weight:800; color:#e85d04; min-width:70px; text-align:center; transition:transform .2s;}
+  .banner{position:fixed; left:0; right:0; top:28%; text-align:center; font-size:3.2rem; font-weight:900; color:#fff; pointer-events:none; z-index:60;
+    text-shadow:0 4px 0 #e85d04, 0 0 24px rgba(255,140,0,.8); animation:bannerIn 1.5s ease-out forwards;}
+  .banner.big{font-size:4.5rem; text-shadow:0 5px 0 #c1121f, 0 0 40px rgba(255,80,0,.9);}
+  @keyframes bannerIn{0%{transform:scale(.3); opacity:0}25%{transform:scale(1.2); opacity:1}40%{transform:scale(1)}85%{opacity:1}100%{opacity:0; transform:scale(1.1)}}
+  .flash{position:fixed; inset:0; background:#fff; pointer-events:none; z-index:55; animation:flash .5s ease-out forwards;}
+  @keyframes flash{0%{opacity:.9}100%{opacity:0}}
+  .burst{position:fixed; width:14px; height:14px; border-radius:50%; pointer-events:none; z-index:52; animation:burst 1.1s ease-out forwards;}
+  @keyframes burst{0%{transform:translate(0,0) scale(1); opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(.2); opacity:0}}
+  body.shake-screen{animation:screenShake .5s;}
+  @keyframes screenShake{0%,100%{transform:translate(0,0)}20%{transform:translate(-8px,4px)}40%{transform:translate(8px,-4px)}60%{transform:translate(-6px,-3px)}80%{transform:translate(6px,3px)}}
+  body.rainbow{animation:rainbow 1.6s linear;}
+  @keyframes rainbow{0%{background:#fff7e6}20%{background:#ffe5ec}40%{background:#fff3b0}60%{background:#d8f3dc}80%{background:#d0f4ff}100%{background:#fff7e6}}
 </style>
 </head>
 <body>
@@ -111,13 +128,15 @@
   <div class="top">
     <button class="btn small ghost" onclick="go('home')">← もどる</button>
     <div class="dots" id="dots"></div>
-    <button class="btn small ghost" id="jaBtn" onclick="toggleJa()">にほんご</button>
+    <span class="streak" id="streak"></span>
+    <span><button class="btn small ghost" id="timerBtn" onclick="toggleTimer()">⏱ タイマー</button> <button class="btn small ghost" id="jaBtn" onclick="toggleJa()">にほんご</button></span>
   </div>
   <div class="steps" id="steps">
     <span class="step">① 🔊を おして きく</span>
     <span class="step">② もじを じゅんばんに おす</span>
     <span class="step">③ ぜんぶ ならべたら できあがり</span>
   </div>
+  <div class="tbar" id="tbar" style="display:none;"><div class="tfill" id="tfill"></div><span class="tnum" id="tnum"></span></div>
   <div class="card" style="text-align:center;">
     <button class="speaker" id="spk" onclick="sayCurrent(1)">🔊</button>
     <div style="margin-top:8px;"><button class="btn small y" onclick="sayCurrent(0.55)">🐢 ゆっくり</button></div>
@@ -137,7 +156,7 @@
 <!-- セット おわり -->
 <section id="done" class="screen">
   <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-    <h1>10こ よめた！</h1>
+    <h1 id="doneTitle">10こ よめた！</h1>
     <div class="big-emoji pop" id="prize">🦊</div>
     <h2 id="prizeText">ずかんに なかまが ふえたよ</h2>
     <button class="btn big b" onclick="startBuild()">🎧 もういちど</button>
@@ -199,6 +218,11 @@
     <label>速さ <span id="rateVal"></span></label>
     <input type="range" id="rate" min="0.6" max="1.2" step="0.05">
     <div class="row" style="margin-top:8px;"><button class="btn small b" onclick="speak('The cat sat on the mat.')">試し聞き</button></div>
+  </div>
+  <div class="card">
+    <label>タイマーの長さ（1語あたり）</label>
+    <select id="timerSec"><option value="10">10秒</option><option value="15">15秒</option><option value="20">20秒</option><option value="30">30秒</option><option value="45">45秒</option></select>
+    <p class="hint">タイマーのオン・オフは「きいて ならべる」画面の「⏱ タイマー」ボタン。時間切れは間違い1回と同じ扱い（連続記録が0に戻り、同じ語をもう一度）。</p>
   </div>
   <div class="card">
     <label>今日読めた単語</label>
@@ -272,6 +296,8 @@ const S={
   get voice(){return localStorage.getItem('pr_voice')||'';}, set voice(v){localStorage.setItem('pr_voice',v);},
   get rate(){return +(localStorage.getItem('pr_rate')||0.9);}, set rate(v){localStorage.setItem('pr_rate',v);},
   get ja(){return localStorage.getItem('pr_ja')==='1';}, set ja(v){localStorage.setItem('pr_ja',v?'1':'0');},
+  get timer(){return localStorage.getItem('pr_timer')==='1';}, set timer(v){localStorage.setItem('pr_timer',v?'1':'0');},
+  get timerSec(){return +(localStorage.getItem('pr_timersec')||15);}, set timerSec(v){localStorage.setItem('pr_timersec',v);},
 };
 function toggleJa(){ S.ja=!S.ja; renderJa(); }
 function renderJa(){
@@ -282,7 +308,7 @@ const today=()=>new Date().toISOString().slice(0,10);
 function logWord(w){const l=S.log; const d=today(); l[d]=l[d]||[]; if(!l[d].includes(w)) l[d].push(w); S.log=l;}
 
 /* ===== 画面 ===== */
-function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on')); document.getElementById(id).classList.add('on'); if(id==='home') renderHome(); if(id==='parent') renderParent(); if(id==='story'||id==='build') renderJa();}
+function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on')); document.getElementById(id).classList.add('on'); if(id==='home') renderHome(); if(id==='parent') renderParent(); if(id==='story'||id==='build') renderJa(); if(id==='build') renderTimerBtn(); else { if(typeof stopTimer==='function') stopTimer(); }}
 function renderHome(){const n=Object.values(S.log).reduce((a,b)=>a+b.length,0); document.getElementById('homeHint').textContent=n?`いままでに ${n}こ よめたよ`:'';}
 
 /* ===== 音声 ===== */
@@ -302,7 +328,25 @@ function speak(text,rate){
     u.rate=rate||S.rate; u.pitch=1.05; speechSynthesis.speak(u);
   },60);
 }
-function unlockAndGo(){ if('speechSynthesis' in window){const u=new SpeechSynthesisUtterance(' '); u.volume=0; speechSynthesis.speak(u);} go('home'); }
+function speakMore(text){ /* いま読んでいる声を止めずに後ろへ足す */
+  if(!('speechSynthesis' in window)) return;
+  const u=new SpeechSynthesisUtterance(text); const v=pickVoice(); if(v){u.voice=v; u.lang=v.lang;} u.rate=1; u.pitch=1.2; speechSynthesis.speak(u);
+}
+let audio=null;
+function unlockAndGo(){
+  if('speechSynthesis' in window){const u=new SpeechSynthesisUtterance(' '); u.volume=0; speechSynthesis.speak(u);}
+  try{ const AC=window.AudioContext||window.webkitAudioContext; if(AC&&!audio){audio=new AC();} audio&&audio.resume(); }catch(e){}
+  go('home');
+}
+function chime(n){ /* 連続の数だけ音が上がっていく */
+  if(!audio) return;
+  const notes=[523,659,784,1047,1319,1568,2093,2637]; const t0=audio.currentTime;
+  for(let i=0;i<Math.min(n,8);i++){
+    const o=audio.createOscillator(), g=audio.createGain(); o.type='triangle'; o.frequency.value=notes[i];
+    g.gain.setValueAtTime(0.0001,t0+i*0.09); g.gain.exponentialRampToValueAtTime(0.25,t0+i*0.09+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t0+i*0.09+0.35);
+    o.connect(g); g.connect(audio.destination); o.start(t0+i*0.09); o.stop(t0+i*0.09+0.4);
+  }
+}
 
 /* ===== きいて ならべる ===== */
 let game=null;
@@ -315,7 +359,7 @@ function pickWords(){
   return chosen.sort(()=>Math.random()-.5).slice(0,10);
 }
 function startBuild(){
-  game={words:pickWords(),i:0,tries:0,slots:[],tiles:[]};
+  game={words:pickWords(),i:0,tries:0,slots:[],tiles:[],streak:0,first:[]};
   go('build'); nextWord();
 }
 function nextWord(){
@@ -326,7 +370,7 @@ function nextWord(){
   game.slots=cur.p.map(()=>null);
   game.ghost=false; game.heard=false;
   render(); document.getElementById('feedback').textContent=''; renderJa();
-  setTimeout(()=>{ speak(cur.w); setTimeout(()=>{ if(game&&game.words[game.i]===cur&&!game.heard){game.heard=true; render();} },1800); },300);
+  setTimeout(()=>{ speak(cur.w); startTimer(); setTimeout(()=>{ if(game&&game.words[game.i]===cur&&!game.heard){game.heard=true; render();} },1800); },300);
 }
 function sayCurrent(rate){ if(game){ speak(game.words[game.i].w, rate===1?S.rate:rate); game.heard=true; render(); } }
 function setStep(n){
@@ -339,7 +383,8 @@ function render(){
   setStep(placed>=game.slots.length?3:(placed>0||game.heard)?2:1);
   const next=game.slots.indexOf(null);
   document.getElementById('slotLabel').textContent=game.ghost?'うすい もじの とおりに おしてね':placed===0?'きこえた ことばを ここに ならべよう':'つぎは ここ！';
-  document.getElementById('dots').innerHTML=game.words.map((_,k)=>`<div class="dot ${k<game.i?'done':k===game.i?'now':''}"></div>`).join('');
+  document.getElementById('dots').innerHTML=game.words.map((_,k)=>`<div class="dot ${k<game.i?(game.first[k]?'gold':'done'):k===game.i?'now':''}"></div>`).join('');
+  const st=document.getElementById('streak'); st.textContent=game.streak>=2?`🔥×${game.streak}`:''; st.style.transform=`scale(${Math.min(1+game.streak*0.08,1.8)})`;
   document.getElementById('slots').innerHTML=game.slots.map((t,k)=>{
     const tile=t!==null?game.tiles.find(x=>x.id===t):null;
     return `<div class="slot ${tile?'filled':''} ${k===next?'next':''} ${cur.p[k].length>1?'wide':''}" onclick="unplace(${k})">${game.ghost&&!tile?`<span class="ghost">${cur.p[k]}</span>`:''}${tile?tile.g:''}</div>`;
@@ -361,20 +406,61 @@ function check(){
   const made=game.slots.map(id=>game.tiles.find(x=>x.id===id).g).join('');
   const fb=document.getElementById('feedback');
   if(made===cur.w){
-    fb.textContent='⭐ よめた！ '+cur.w; logWord(cur.w); speak(cur.w); confetti();
+    stopTimer();
+    const firstTry=game.tries===0; game.first[game.i]=firstTry;
+    game.streak=firstTry?game.streak+1:0;
+    fb.textContent='⭐ よめた！ '+cur.w; logWord(cur.w); speak(cur.w); render();
+    celebrate(game.streak);
     document.getElementById('slots').classList.add('pop');
-    setTimeout(()=>{document.getElementById('slots').classList.remove('pop'); game.i++; if(game.i>=game.words.length) finish(); else nextWord();},1400);
+    const wait=game.streak>=5?2200:game.streak>=3?1800:1400;
+    setTimeout(()=>{document.getElementById('slots').classList.remove('pop'); game.i++; if(game.i>=game.words.length) finish(); else nextWord();},wait);
   }else{
-    game.tries++; fb.textContent='もういちど きいてみよう';
-    const el=document.getElementById('slots'); el.classList.add('shake');
-    setTimeout(()=>{el.classList.remove('shake'); game.tiles.forEach(t=>t.used=false); game.slots=game.slots.map(()=>null); if(game.tries>=2) game.ghost=true; render(); sayCurrent(0.7);},700);
+    miss('もういちど きいてみよう');
   }
 }
-function finish(){
-  const c=S.coll; const a=ANIMALS[Math.floor(Math.random()*ANIMALS.length)]; c.push({a,d:today()}); S.coll=c;
-  document.getElementById('prize').textContent=a; go('done'); confetti(); confetti();
+function miss(msg){ /* 間違い・時間切れ：連続はゼロに戻る */
+  stopTimer(); game.tries++; game.streak=0; document.getElementById('feedback').textContent=msg;
+  const el=document.getElementById('slots'); el.classList.add('shake');
+  setTimeout(()=>{el.classList.remove('shake'); game.tiles.forEach(t=>t.used=false); game.slots=game.slots.map(()=>null); if(game.tries>=2) game.ghost=true; render(); sayCurrent(0.7); startTimer();},700);
 }
-function confetti(){ const e=['🎉','⭐','🌟','✨','🎊']; for(let i=0;i<14;i++){const d=document.createElement('div'); d.className='confetti'; d.textContent=e[i%e.length]; d.style.left=Math.random()*100+'vw'; d.style.animationDelay=(Math.random()*.4)+'s'; document.body.appendChild(d); setTimeout(()=>d.remove(),2000);} }
+function finish(){
+  stopTimer();
+  const c=S.coll; const perfect=game.first.length===game.words.length&&game.first.every(Boolean);
+  const n=perfect?2:1; const got=[];
+  for(let i=0;i<n;i++){const a=ANIMALS[Math.floor(Math.random()*ANIMALS.length)]; c.push({a,d:today()}); got.push(a);}
+  S.coll=c;
+  document.getElementById('prize').textContent=got.join(' ');
+  document.getElementById('doneTitle').textContent=perfect?'🏆 パーフェクト！！':'10こ よめた！';
+  document.getElementById('prizeText').textContent=perfect?'ぜんぶ いっぱつ！ なかまが 2ひき ふえたよ':'ずかんに なかまが ふえたよ';
+  go('done'); celebrate(perfect?10:3); if(perfect) speakMore('Perfect! You are a superstar!');
+}
+/* ===== 演出：連続するほど派手に ===== */
+function confetti(n,set){ const e=set||['🎉','⭐','🌟','✨','🎊']; for(let i=0;i<n;i++){const d=document.createElement('div'); d.className='confetti'; d.textContent=e[i%e.length]; d.style.left=Math.random()*100+'vw'; d.style.fontSize=(1.6+Math.random()*1.4)+'rem'; d.style.animationDelay=(Math.random()*.6)+'s'; document.body.appendChild(d); setTimeout(()=>d.remove(),2400);} }
+function banner(text,big){ const b=document.createElement('div'); b.className='banner'+(big?' big':''); b.textContent=text; document.body.appendChild(b); setTimeout(()=>b.remove(),1600); }
+function flash(){ const f=document.createElement('div'); f.className='flash'; document.body.appendChild(f); setTimeout(()=>f.remove(),600); }
+function firework(x,y){ const cols=['#ff595e','#ffca3a','#8ac926','#1982c4','#6a4c93','#ff8c42']; for(let i=0;i<22;i++){const p=document.createElement('div'); p.className='burst'; const a=Math.PI*2*i/22, r=90+Math.random()*120; p.style.left=x+'px'; p.style.top=y+'px'; p.style.background=cols[i%cols.length]; p.style.setProperty('--dx',Math.cos(a)*r+'px'); p.style.setProperty('--dy',Math.sin(a)*r+'px'); document.body.appendChild(p); setTimeout(()=>p.remove(),1200);} }
+function fireworks(k){ for(let i=0;i<k;i++){ setTimeout(()=>firework(60+Math.random()*(innerWidth-120), 80+Math.random()*(innerHeight*0.5)), i*180); } }
+function celebrate(n){
+  const b=document.body;
+  if(n<=1){ confetti(14); return; }
+  if(n===2){ confetti(26); banner('すごい！ 2れんぞく'); chime(2); return; }
+  if(n<5){ confetti(40); flash(); banner(`すごい！ ${n}れんぞく！`); chime(n); b.classList.add('rainbow'); setTimeout(()=>b.classList.remove('rainbow'),1700); speakMore('Great!'); return; }
+  if(n<7){ confetti(60); flash(); fireworks(3); banner(`🔥 ${n}れんぞく！！`,true); chime(n); b.classList.add('shake-screen','rainbow'); setTimeout(()=>b.classList.remove('shake-screen','rainbow'),1700); speakMore('Wow! Amazing!'); return; }
+  if(n<10){ confetti(90,['🌟','💛','🏆','✨','🎉']); flash(); fireworks(6); banner(`🔥🔥 ${n}れんぞく！！！`,true); chime(8); b.classList.add('shake-screen','rainbow'); setTimeout(()=>b.classList.remove('shake-screen','rainbow'),1700); speakMore('Super star!'); return; }
+  confetti(120,['🏆','👑','🌟','💎','🎉']); flash(); fireworks(10); banner('👑 パーフェクト！！！',true); chime(8); setTimeout(()=>chime(8),500); b.classList.add('shake-screen','rainbow'); setTimeout(()=>b.classList.remove('shake-screen','rainbow'),1700);
+}
+/* ===== タイマー（オンオフ切替） ===== */
+let tHandle=null, tEnd=0;
+function toggleTimer(){ S.timer=!S.timer; renderTimerBtn(); if(game){ if(S.timer) startTimer(); else stopTimer(); } }
+function renderTimerBtn(){ const b=document.getElementById('timerBtn'); if(b){ b.classList.toggle('on',S.timer); b.textContent=S.timer?`⏱ ${S.timerSec}びょう ✔`:'⏱ タイマー'; } const bar=document.getElementById('tbar'); if(bar) bar.style.display=S.timer?'block':'none'; }
+function startTimer(){
+  stopTimer(); if(!S.timer||!game) return;
+  const sec=S.timerSec; tEnd=Date.now()+sec*1000; const fill=document.getElementById('tfill'), num=document.getElementById('tnum');
+  const tick=()=>{ const left=Math.max(0,tEnd-Date.now()); const r=left/(sec*1000); fill.style.width=(r*100)+'%'; fill.style.background=r>0.5?'#06d6a0':r>0.25?'#ffd166':'#ef476f'; num.textContent=Math.ceil(left/1000); if(left<=0){ stopTimer(); timeUp(); } };
+  tick(); tHandle=setInterval(tick,100);
+}
+function stopTimer(){ if(tHandle){clearInterval(tHandle); tHandle=null;} }
+function timeUp(){ if(!game) return; if(game.slots.every(s=>s!==null)) return; miss('⏰ じかんぎれ！ もういちど'); }
 
 /* ===== ずかん ===== */
 function showBook(){
@@ -454,6 +540,7 @@ function renderParent(){
   fillVoiceSel();
   const r=document.getElementById('rate'); r.value=S.rate; document.getElementById('rateVal').textContent=S.rate.toFixed(2);
   r.oninput=()=>{S.rate=+r.value; document.getElementById('rateVal').textContent=S.rate.toFixed(2);};
+  const ts=document.getElementById('timerSec'); ts.value=String(S.timerSec); ts.onchange=()=>{S.timerSec=+ts.value;};
   const l=S.log; const t=l[today()]||[];
   document.getElementById('todayWords').textContent=t.length?t.join('　'):'まだありません';
   const days=Object.keys(l).sort().reverse().slice(0,7);
