@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#ffd166">
+<title>えいご よめた！</title>
+<style>
+  :root{
+    --bg:#fff7e6; --card:#ffffff; --ink:#333; --sub:#777;
+    --y:#ffd166; --o:#ff8c42; --g:#06d6a0; --b:#4cc9f0; --p:#c77dff; --r:#ef476f;
+    --tile:#fff; --tile-bd:#ffb703;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none;}
+  html,body{margin:0; height:100%; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,"Hiragino Maru Gothic ProN","Hiragino Sans","BIZ UDPGothic","Yu Gothic UI",sans-serif; touch-action:manipulation;}
+  body{display:flex; flex-direction:column; min-height:100dvh; padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);}
+  .screen{display:none; flex:1; flex-direction:column; padding:16px; max-width:900px; width:100%; margin:0 auto;}
+  .screen.on{display:flex;}
+  h1{font-size:2.2rem; margin:8px 0; text-align:center;}
+  h2{font-size:1.5rem; margin:4px 0 12px; text-align:center;}
+  .btn{border:none; border-radius:22px; padding:18px 22px; font-size:1.5rem; font-weight:700; color:#fff; background:var(--o);
+    box-shadow:0 6px 0 rgba(0,0,0,.15); cursor:pointer; min-height:64px; font-family:inherit;}
+  .btn:active{transform:translateY(4px); box-shadow:0 2px 0 rgba(0,0,0,.15);}
+  .btn.big{font-size:2rem; padding:28px; width:100%; margin:10px 0;}
+  .btn.y{background:var(--y); color:#5a3d00;} .btn.g{background:var(--g);} .btn.b{background:var(--b);} .btn.p{background:var(--p);} .btn.r{background:var(--r);}
+  .btn.ghost{background:#eee; color:#555; box-shadow:none;}
+  .btn.small{font-size:1.1rem; padding:10px 16px; min-height:44px; border-radius:14px;}
+  .row{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; align-items:center;}
+  .top{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;}
+  .dots{display:flex; gap:6px; flex-wrap:wrap; justify-content:center;}
+  .dot{width:16px; height:16px; border-radius:50%; background:#e5d9c3;} .dot.done{background:var(--g);} .dot.now{background:var(--o);}
+  .card{background:var(--card); border-radius:24px; padding:16px; box-shadow:0 4px 16px rgba(0,0,0,.06); margin:8px 0;}
+  .slots,.tiles{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; min-height:90px; align-items:center;}
+  .slot{width:84px; height:84px; border:4px dashed #e0cfa8; border-radius:18px; display:flex; align-items:center; justify-content:center;
+    font-size:2.6rem; font-weight:800; background:#fffdf7; position:relative; font-family:"Comic Sans MS","Chalkboard SE","Segoe Print",sans-serif;}
+  .slot.filled{border-style:solid; border-color:var(--tile-bd); background:#fff;}
+  .slot .ghost{position:absolute; color:#ddd; font-size:2.6rem;}
+  .tile{width:84px; height:84px; border-radius:18px; background:var(--tile); border:4px solid var(--tile-bd); display:flex; align-items:center; justify-content:center;
+    font-size:2.6rem; font-weight:800; box-shadow:0 5px 0 #e09e00; cursor:pointer; font-family:"Comic Sans MS","Chalkboard SE","Segoe Print",sans-serif;}
+  .tile.used{visibility:hidden;}
+  .tile:active{transform:translateY(3px); box-shadow:0 2px 0 #e09e00;}
+  .wide{width:auto; min-width:84px; padding:0 14px;}
+  .shake{animation:shake .5s;} @keyframes shake{20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-8px)}80%{transform:translateX(8px)}}
+  .pop{animation:pop .6s;} @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.25)}100%{transform:scale(1)}}
+  .feedback{text-align:center; font-size:2.2rem; min-height:3rem; margin:6px 0;}
+  .speaker{font-size:4rem; width:140px; height:140px; border-radius:50%; background:var(--b); border:none; box-shadow:0 8px 0 #1b9fc7; cursor:pointer;}
+  .speaker:active{transform:translateY(5px); box-shadow:0 3px 0 #1b9fc7;}
+  .mic{font-size:4rem; width:150px; height:150px; border-radius:50%; background:var(--r); border:none; box-shadow:0 8px 0 #b8294c; cursor:pointer; color:#fff;}
+  .mic.listening{animation:pulse 1s infinite; background:#ff2d6f;} @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
+  .storybox{min-height:160px; font-size:1.9rem; line-height:1.9; font-family:"Comic Sans MS","Chalkboard SE","Segoe Print",sans-serif;}
+  .chip{display:inline-block; padding:2px 10px; margin:4px 3px; border-radius:12px; background:#fff3cd; border:2px solid #ffe08a; cursor:pointer;}
+  .chip.hl{background:var(--y); border-color:var(--o);}
+  .hint{color:var(--sub); font-size:1rem; text-align:center;}
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(80px,1fr)); gap:10px;}
+  .cell{font-size:3rem; text-align:center; background:#fff; border-radius:18px; padding:8px; box-shadow:0 3px 10px rgba(0,0,0,.06);}
+  .cell small{display:block; font-size:.9rem; color:var(--sub);}
+  .setbtn{border:3px solid #ddd; border-radius:14px; padding:10px; background:#fff; font-size:1rem; text-align:left; cursor:pointer; font-family:inherit;}
+  .setbtn.on{border-color:var(--g); background:#e6fff7;}
+  .setbtn b{display:block; font-size:.9rem; color:var(--sub);}
+  .setbtn span{font-family:"Comic Sans MS","Chalkboard SE","Segoe Print",sans-serif; font-size:1.3rem; letter-spacing:2px;}
+  .gear{position:fixed; right:14px; bottom:14px; font-size:1.6rem; opacity:.35; background:none; border:none; cursor:pointer;}
+  label{display:block; margin:10px 0 4px; font-weight:700;}
+  select,input[type=range]{font-size:1.1rem; width:100%;}
+  .list{font-size:1.1rem; line-height:1.8;}
+  .storyitem{background:#fff; border-radius:14px; padding:10px 14px; margin:6px 0; cursor:pointer; font-size:1.2rem; box-shadow:0 2px 8px rgba(0,0,0,.05);}
+  .big-emoji{font-size:6rem; text-align:center; margin:10px 0;}
+  .confetti{position:fixed; top:-20px; font-size:2rem; animation:fall 1.6s linear forwards; pointer-events:none;}
+  @keyframes fall{to{transform:translateY(110vh) rotate(360deg); opacity:.2}}
+</style>
+</head>
+<body>
+
+<!-- スタート -->
+<section id="start" class="screen on">
+  <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:20px;">
+    <div class="big-emoji">🦊📖</div>
+    <h1>えいご よめた！</h1>
+    <button class="btn big y" onclick="unlockAndGo()">▶ はじめる</button>
+    <p class="hint">はじめに ここを おしてね（おとが でるように なります）</p>
+  </div>
+</section>
+
+<!-- ホーム -->
+<section id="home" class="screen">
+  <h1>なにで あそぶ？</h1>
+  <button class="btn big b" onclick="startBuild()">🎧 きいて ならべる</button>
+  <button class="btn big r" onclick="go('story')">🎤 じぶんの おはなし</button>
+  <button class="btn big g" onclick="showBook()">📖 ずかん</button>
+  <p class="hint" id="homeHint"></p>
+  <button class="gear" id="gear">⚙️</button>
+</section>
+
+<!-- きいて ならべる -->
+<section id="build" class="screen">
+  <div class="top">
+    <button class="btn small ghost" onclick="go('home')">← もどる</button>
+    <div class="dots" id="dots"></div>
+    <span></span>
+  </div>
+  <div class="card" style="text-align:center;">
+    <button class="speaker" onclick="sayCurrent(1)">🔊</button>
+    <div style="margin-top:8px;"><button class="btn small y" onclick="sayCurrent(0.55)">🐢 ゆっくり</button></div>
+  </div>
+  <div class="card">
+    <div class="slots" id="slots"></div>
+  </div>
+  <div class="feedback" id="feedback"></div>
+  <div class="card">
+    <div class="tiles" id="tiles"></div>
+  </div>
+</section>
+
+<!-- セット おわり -->
+<section id="done" class="screen">
+  <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+    <h1>10こ よめた！</h1>
+    <div class="big-emoji pop" id="prize">🦊</div>
+    <h2 id="prizeText">ずかんに なかまが ふえたよ</h2>
+    <button class="btn big b" onclick="startBuild()">🎧 もういちど</button>
+    <button class="btn big g" onclick="showBook()">📖 ずかんを みる</button>
+    <button class="btn big ghost" onclick="go('home')">🏠 ホーム</button>
+  </div>
+</section>
+
+<!-- じぶんの おはなし -->
+<section id="story" class="screen">
+  <div class="top">
+    <button class="btn small ghost" onclick="go('home')">← もどる</button>
+    <h2 style="margin:0;">🎤 じぶんの おはなし</h2>
+    <button class="btn small ghost" onclick="typeStory()">✍️</button>
+  </div>
+  <div class="card storybox" id="storyBox"><span class="hint">マイクを おして、えいごで はなしてね。ことばが ここに でてくるよ。</span></div>
+  <div class="row" style="margin:8px 0;">
+    <button class="mic" id="micBtn" onclick="toggleListen()">🎤</button>
+  </div>
+  <p class="hint" id="micHint">マイクを おしてから はなしてね</p>
+  <div class="row">
+    <button class="btn b" onclick="readAll()">🔊 ぜんぶ よむ</button>
+    <button class="btn g" onclick="saveStory()">💾 ほぞん</button>
+    <button class="btn ghost" onclick="clearStory()">🗑 けす</button>
+  </div>
+  <div class="row" style="margin-top:8px;">
+    <button class="btn small p" onclick="toggleStoryList()">📚 ほぞんした おはなし</button>
+  </div>
+  <div id="storyList" style="display:none;"></div>
+  <p class="hint">ことばを さわると よんでくれるよ</p>
+</section>
+
+<!-- ずかん -->
+<section id="book" class="screen">
+  <div class="top">
+    <button class="btn small ghost" onclick="go('home')">← もどる</button>
+    <h2 style="margin:0;">📖 ずかん</h2>
+    <span></span>
+  </div>
+  <p class="hint" id="bookStats"></p>
+  <div class="grid" id="bookGrid"></div>
+</section>
+
+<!-- おうちの人 -->
+<section id="parent" class="screen">
+  <div class="top">
+    <button class="btn small ghost" onclick="go('home')">← もどる</button>
+    <h2 style="margin:0;">おうちの人の設定</h2>
+    <span></span>
+  </div>
+  <div class="card">
+    <label>学校で習った音はここまで（タップで選ぶ）</label>
+    <div class="grid" id="setGrid" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr));"></div>
+    <p class="hint">「きいて ならべる」に出る単語は、選んだセットまでの音だけで読める語に限られます。</p>
+  </div>
+  <div class="card">
+    <label>読み上げの声</label>
+    <select id="voiceSel"></select>
+    <label>速さ <span id="rateVal"></span></label>
+    <input type="range" id="rate" min="0.6" max="1.2" step="0.05">
+    <div class="row" style="margin-top:8px;"><button class="btn small b" onclick="speak('The cat sat on the mat.')">試し聞き</button></div>
+  </div>
+  <div class="card">
+    <label>今日読めた単語</label>
+    <div class="list" id="todayWords">まだありません</div>
+    <label>最近7日</label>
+    <div class="list" id="weekLog"></div>
+  </div>
+  <div class="card">
+    <div class="row">
+      <button class="btn small r" onclick="resetAll()">ずかんと記録をリセット</button>
+    </div>
+  </div>
+</section>
+
+<script>
+/* ===== フォニックスの音のセット（英国式 Letters and Sounds の順） ===== */
+const SETS=[
+ {g:['s','a','t','p']},
+ {g:['i','n','m','d']},
+ {g:['g','o','c','k']},
+ {g:['ck','e','u','r']},
+ {g:['h','b','f','ff','l','ll','ss']},
+ {g:['j','v','w','x']},
+ {g:['y','z','zz','qu']},
+ {g:['ch','sh','th','ng']},
+ {g:['ai','ee','igh','oa','oo','ar','or','ur','ow','oi','ear','air','ure','er']},
+];
+const G2SET={}; SETS.forEach((s,i)=>s.g.forEach(g=>G2SET[g]=i+1));
+const GRAPHEMES=Object.keys(G2SET).sort((a,b)=>b.length-a.length);
+
+const WORDS=`at sat pat tap sap pit tip
+sit pin nap man pan dad sad mat dip map mad and sand tin din pad
+dog cat pig kid got cot cap cod pot top mop dig kit gap tag can dot nod cup
+ten pen red bed net bus sun mud run rat rug mug sock duck kick rock back neck pack pup cut nut
+hat hen hot hug bag big bug fan fit fun fog off huff puff leg lip log lot bell doll hill fill fell tell sell dull mess kiss less hiss boss fuss lick lock luck bat bin bud fed fin fig lid lap ham hip hop
+jam jet jog jug van vet wet win wig web wax box fox six mix fix jab wag
+yes yet yum yap yak zip zap zig buzz fizz jazz quiz quit quick
+chip chop chin chat much rich such shop ship shell fish dish wish bash rush thin thick this that then them moth bath path with ring sing song long king wing bang hang
+rain tail wait pain sail nail paint see feet tree bee seed deep keep sleep green sheep high night light boat goat road coat moon food zoo boot book look cook car farm park star dark hard arm fork corn horn for sort burn turn surf fur hurt cow down town owl now how coin boil join oil ear hear near hair fair pair chair pure sure her term`.split(/\s+/);
+
+function split(word){
+  const out=[]; let i=0;
+  while(i<word.length){
+    const g=GRAPHEMES.find(g=>word.startsWith(g,i));
+    if(!g) return null;
+    out.push(g); i+=g.length;
+  }
+  return out;
+}
+const BANK=WORDS.map(w=>{const p=split(w); if(!p) return null; return {w,p,level:Math.max(...p.map(g=>G2SET[g]))};}).filter(Boolean);
+
+const ANIMALS=['🦊','🐼','🐨','🦁','🐯','🐸','🐙','🦄','🐧','🦉','🐢','🐬','🦋','🐝','🦖','🐳','🦒','🦘','🐿️','🦩','🐲','🦜','🐞','🦔'];
+
+/* ===== 保存 ===== */
+const S={
+  get level(){return +(localStorage.getItem('pr_level')||5);}, set level(v){localStorage.setItem('pr_level',v);},
+  get coll(){return JSON.parse(localStorage.getItem('pr_coll')||'[]');}, set coll(v){localStorage.setItem('pr_coll',JSON.stringify(v));},
+  get log(){return JSON.parse(localStorage.getItem('pr_log')||'{}');}, set log(v){localStorage.setItem('pr_log',JSON.stringify(v));},
+  get stories(){return JSON.parse(localStorage.getItem('pr_stories')||'[]');}, set stories(v){localStorage.setItem('pr_stories',JSON.stringify(v));},
+  get voice(){return localStorage.getItem('pr_voice')||'';}, set voice(v){localStorage.setItem('pr_voice',v);},
+  get rate(){return +(localStorage.getItem('pr_rate')||0.9);}, set rate(v){localStorage.setItem('pr_rate',v);},
+};
+const today=()=>new Date().toISOString().slice(0,10);
+function logWord(w){const l=S.log; const d=today(); l[d]=l[d]||[]; if(!l[d].includes(w)) l[d].push(w); S.log=l;}
+
+/* ===== 画面 ===== */
+function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on')); document.getElementById(id).classList.add('on'); if(id==='home') renderHome(); if(id==='parent') renderParent();}
+function renderHome(){const n=Object.values(S.log).reduce((a,b)=>a+b.length,0); document.getElementById('homeHint').textContent=n?`いままでに ${n}こ よめたよ`:'';}
+
+/* ===== 音声 ===== */
+let voices=[];
+function loadVoices(){voices=speechSynthesis.getVoices().filter(v=>/^en/i.test(v.lang)); fillVoiceSel();}
+if('speechSynthesis' in window){loadVoices(); speechSynthesis.onvoiceschanged=loadVoices;}
+function pickVoice(){
+  const want=S.voice; let v=voices.find(x=>x.name===want);
+  if(!v) v=voices.find(x=>/en-GB/i.test(x.lang)&&/Daniel|Kate|Serena/i.test(x.name))||voices.find(x=>/en-GB/i.test(x.lang))||voices.find(x=>/Samantha/i.test(x.name))||voices[0];
+  return v;
+}
+function speak(text,rate){
+  if(!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  setTimeout(()=>{
+    const u=new SpeechSynthesisUtterance(text); const v=pickVoice(); if(v){u.voice=v; u.lang=v.lang;} else u.lang='en-GB';
+    u.rate=rate||S.rate; u.pitch=1.05; speechSynthesis.speak(u);
+  },60);
+}
+function unlockAndGo(){ if('speechSynthesis' in window){const u=new SpeechSynthesisUtterance(' '); u.volume=0; speechSynthesis.speak(u);} go('home'); }
+
+/* ===== きいて ならべる ===== */
+let game=null;
+function pickWords(){
+  const L=S.level; const pool=BANK.filter(b=>b.level<=L);
+  const top=pool.filter(b=>b.level===L).sort(()=>Math.random()-.5);
+  const rest=pool.filter(b=>b.level<L).sort(()=>Math.random()-.5);
+  const chosen=[...top.slice(0,5),...rest].slice(0,10);
+  if(chosen.length<10) chosen.push(...top.slice(5,10-chosen.length));
+  return chosen.sort(()=>Math.random()-.5).slice(0,10);
+}
+function startBuild(){
+  game={words:pickWords(),i:0,tries:0,slots:[],tiles:[]};
+  go('build'); nextWord();
+}
+function nextWord(){
+  const cur=game.words[game.i]; game.tries=0;
+  const learned=SETS.slice(0,S.level).flatMap(s=>s.g).filter(g=>!cur.p.includes(g)).sort(()=>Math.random()-.5);
+  const extra=learned.slice(0,Math.min(2,learned.length));
+  game.tiles=[...cur.p,...extra].map((g,id)=>({g,id,used:false})).sort(()=>Math.random()-.5);
+  game.slots=cur.p.map(()=>null);
+  game.ghost=false;
+  render(); document.getElementById('feedback').textContent='';
+  setTimeout(()=>sayCurrent(1),300);
+}
+function sayCurrent(rate){ if(game) speak(game.words[game.i].w, rate===1?S.rate:rate); }
+function render(){
+  const cur=game.words[game.i];
+  document.getElementById('dots').innerHTML=game.words.map((_,k)=>`<div class="dot ${k<game.i?'done':k===game.i?'now':''}"></div>`).join('');
+  document.getElementById('slots').innerHTML=game.slots.map((t,k)=>{
+    const tile=t!==null?game.tiles.find(x=>x.id===t):null;
+    return `<div class="slot ${tile?'filled':''} ${cur.p[k].length>1?'wide':''}" onclick="unplace(${k})">${game.ghost&&!tile?`<span class="ghost">${cur.p[k]}</span>`:''}${tile?tile.g:''}</div>`;
+  }).join('');
+  document.getElementById('tiles').innerHTML=game.tiles.map(t=>`<div class="tile ${t.used?'used':''} ${t.g.length>1?'wide':''}" onclick="place(${t.id})">${t.g}</div>`).join('');
+}
+function place(id){
+  const t=game.tiles.find(x=>x.id===id); if(t.used) return;
+  const k=game.slots.indexOf(null); if(k<0) return;
+  t.used=true; game.slots[k]=id; render();
+  if(!game.slots.includes(null)) check();
+}
+function unplace(k){
+  const id=game.slots[k]; if(id===null) return;
+  game.tiles.find(x=>x.id===id).used=false; game.slots[k]=null; render();
+}
+function check(){
+  const cur=game.words[game.i];
+  const made=game.slots.map(id=>game.tiles.find(x=>x.id===id).g).join('');
+  const fb=document.getElementById('feedback');
+  if(made===cur.w){
+    fb.textContent='⭐ よめた！ '+cur.w; logWord(cur.w); speak(cur.w); confetti();
+    document.getElementById('slots').classList.add('pop');
+    setTimeout(()=>{document.getElementById('slots').classList.remove('pop'); game.i++; if(game.i>=game.words.length) finish(); else nextWord();},1400);
+  }else{
+    game.tries++; fb.textContent='もういちど きいてみよう';
+    const el=document.getElementById('slots'); el.classList.add('shake');
+    setTimeout(()=>{el.classList.remove('shake'); game.tiles.forEach(t=>t.used=false); game.slots=game.slots.map(()=>null); if(game.tries>=2) game.ghost=true; render(); sayCurrent(0.7);},700);
+  }
+}
+function finish(){
+  const c=S.coll; const a=ANIMALS[Math.floor(Math.random()*ANIMALS.length)]; c.push({a,d:today()}); S.coll=c;
+  document.getElementById('prize').textContent=a; go('done'); confetti(); confetti();
+}
+function confetti(){ const e=['🎉','⭐','🌟','✨','🎊']; for(let i=0;i<14;i++){const d=document.createElement('div'); d.className='confetti'; d.textContent=e[i%e.length]; d.style.left=Math.random()*100+'vw'; d.style.animationDelay=(Math.random()*.4)+'s'; document.body.appendChild(d); setTimeout(()=>d.remove(),2000);} }
+
+/* ===== ずかん ===== */
+function showBook(){
+  const c=S.coll; const n=Object.values(S.log).reduce((a,b)=>a+b.length,0);
+  document.getElementById('bookStats').textContent=`なかま ${c.length}ひき ／ よめた ことば ${n}こ`;
+  const cnt={}; c.forEach(x=>cnt[x.a]=(cnt[x.a]||0)+1);
+  document.getElementById('bookGrid').innerHTML=Object.keys(cnt).length?Object.entries(cnt).map(([a,k])=>`<div class="cell">${a}<small>×${k}</small></div>`).join(''):'<p class="hint">「きいて ならべる」で 10こ よめると なかまが ふえるよ</p>';
+  go('book');
+}
+
+/* ===== じぶんの おはなし ===== */
+let story=[]; let rec=null; let listening=false;
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+function renderStory(){
+  const box=document.getElementById('storyBox');
+  box.innerHTML=story.length?story.map((w,i)=>`<span class="chip" id="w${i}" onclick="sayWord(${i})">${w}</span>`).join(''):'<span class="hint">マイクを おして、えいごで はなしてね。ことばが ここに でてくるよ。</span>';
+}
+function sayWord(i){ document.querySelectorAll('.chip').forEach(c=>c.classList.remove('hl')); const el=document.getElementById('w'+i); el.classList.add('hl'); speak(story[i].replace(/[^a-zA-Z']/g,''),0.8); logWord(story[i].replace(/[^a-zA-Z']/g,'').toLowerCase()); }
+function toggleListen(){
+  const hint=document.getElementById('micHint'); const btn=document.getElementById('micBtn');
+  if(!SR){ hint.textContent='この ブラウザは マイクの ききとりに たいおう していません（iPadは Safariで ひらいてね）'; return; }
+  if(listening){ rec&&rec.stop(); return; }
+  speechSynthesis.cancel();
+  rec=new SR(); rec.lang='en-US'; rec.interimResults=true; rec.continuous=false; rec.maxAlternatives=1;
+  let interim='';
+  rec.onstart=()=>{listening=true; btn.classList.add('listening'); hint.textContent='きいてるよ… はなしてね';};
+  rec.onresult=e=>{
+    interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const t=e.results[i][0].transcript.trim();
+      if(e.results[i].isFinal){ story.push(...t.split(/\s+/).filter(Boolean)); renderStory(); }
+      else interim+=t+' ';
+    }
+    if(interim) hint.textContent='…'+interim;
+  };
+  rec.onerror=e=>{ hint.textContent= e.error==='not-allowed'?'マイクが つかえません。おうちの人に せっていを きいてね':'うまく きこえなかったよ。もういちど おしてね'; };
+  rec.onend=()=>{listening=false; btn.classList.remove('listening'); if(!hint.textContent.startsWith('マイクが')) hint.textContent='マイクを おしてから はなしてね';};
+  try{ rec.start(); }catch(err){ hint.textContent='もういちど おしてね'; }
+}
+function readAll(){
+  if(!story.length) return;
+  const text=story.join(' ');
+  speechSynthesis.cancel();
+  setTimeout(()=>{
+    const u=new SpeechSynthesisUtterance(text); const v=pickVoice(); if(v){u.voice=v; u.lang=v.lang;} u.rate=Math.min(S.rate,0.9);
+    const starts=[]; let p=0; story.forEach(w=>{starts.push(p); p+=w.length+1;});
+    u.onboundary=ev=>{ if(ev.name&&ev.name!=='word') return; let idx=0; for(let i=0;i<starts.length;i++) if(starts[i]<=ev.charIndex) idx=i; document.querySelectorAll('.chip').forEach(c=>c.classList.remove('hl')); const el=document.getElementById('w'+idx); if(el) el.classList.add('hl'); };
+    u.onend=()=>document.querySelectorAll('.chip').forEach(c=>c.classList.remove('hl'));
+    speechSynthesis.speak(u);
+  },60);
+}
+function clearStory(){ story=[]; renderStory(); }
+function typeStory(){ const t=prompt('おとなが えいごの ぶんを うってください'); if(t){ story.push(...t.trim().split(/\s+/).filter(Boolean)); renderStory(); } }
+function saveStory(){ if(!story.length) return; const s=S.stories; s.unshift({d:today(),t:story.join(' ')}); S.stories=s.slice(0,50); document.getElementById('micHint').textContent='ほぞんしたよ 💾'; }
+function toggleStoryList(){
+  const el=document.getElementById('storyList'); if(el.style.display!=='none'){el.style.display='none'; return;}
+  const s=S.stories; el.innerHTML=s.length?s.map((x,i)=>`<div class="storyitem" onclick="loadStory(${i})">${x.d}　${x.t.split(' ').slice(0,6).join(' ')}…</div>`).join(''):'<p class="hint">まだ ありません</p>'; el.style.display='block';
+}
+function loadStory(i){ story=S.stories[i].t.split(' '); renderStory(); document.getElementById('storyList').style.display='none'; }
+
+/* ===== おうちの人 ===== */
+let pressTimer=null;
+const gear=document.getElementById('gear');
+const startPress=e=>{e.preventDefault(); pressTimer=setTimeout(()=>go('parent'),1200);};
+const endPress=()=>clearTimeout(pressTimer);
+gear.addEventListener('touchstart',startPress,{passive:false}); gear.addEventListener('mousedown',startPress);
+['touchend','touchcancel','mouseup','mouseleave'].forEach(ev=>gear.addEventListener(ev,endPress));
+
+function renderParent(){
+  const L=S.level;
+  document.getElementById('setGrid').innerHTML=SETS.map((s,i)=>`<button class="setbtn ${i<L?'on':''}" onclick="S.level=${i+1};renderParent()"><b>セット${i+1}</b><span>${s.g.join(' ')}</span></button>`).join('');
+  fillVoiceSel();
+  const r=document.getElementById('rate'); r.value=S.rate; document.getElementById('rateVal').textContent=S.rate.toFixed(2);
+  r.oninput=()=>{S.rate=+r.value; document.getElementById('rateVal').textContent=S.rate.toFixed(2);};
+  const l=S.log; const t=l[today()]||[];
+  document.getElementById('todayWords').textContent=t.length?t.join('　'):'まだありません';
+  const days=Object.keys(l).sort().reverse().slice(0,7);
+  document.getElementById('weekLog').innerHTML=days.length?days.map(d=>`${d}：${l[d].length}語`).join('<br>'):'記録なし';
+}
+function fillVoiceSel(){
+  const sel=document.getElementById('voiceSel'); if(!sel) return;
+  sel.innerHTML=voices.map(v=>`<option value="${v.name}" ${v.name===S.voice?'selected':''}>${v.name}（${v.lang}）</option>`).join('')||'<option>英語の声が見つかりません</option>';
+  sel.onchange=()=>S.voice=sel.value;
+}
+function resetAll(){ if(confirm('ずかんと読めた単語の記録を消します。よろしいですか？')){ localStorage.removeItem('pr_coll'); localStorage.removeItem('pr_log'); renderParent(); } }
+</script>
+</body>
+</html>
