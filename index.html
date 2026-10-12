@@ -68,6 +68,18 @@
   .list{font-size:1.1rem; line-height:1.8;}
   .storyitem{background:#fff; border-radius:14px; padding:10px 14px; margin:6px 0; cursor:pointer; font-size:1.2rem; box-shadow:0 2px 8px rgba(0,0,0,.05);}
   .big-emoji{font-size:6rem; text-align:center; margin:10px 0;}
+  .steps{display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin:4px 0 8px;}
+  .step{padding:8px 12px; border-radius:14px; background:#f1ece0; color:#aaa; font-size:1.05rem; font-weight:700;}
+  .step.on{background:var(--y); color:#5a3d00; transform:scale(1.05);}
+  .step.ok{background:#d9f7ea; color:#1a8a5a;}
+  .label{text-align:center; font-size:1.25rem; font-weight:700; color:#5a3d00; margin-bottom:8px;}
+  .slots{padding-top:34px;}
+  .slot.next{border-color:var(--o); background:#fff4e6;}
+  .slot.next::after{content:'👇'; position:absolute; top:-40px; font-size:1.8rem; animation:bounce .8s infinite;}
+  @keyframes bounce{50%{transform:translateY(-7px)}}
+  .ja{font-size:1.7rem; color:#b05a00; text-align:center; min-height:2.2rem; margin-top:6px; font-weight:700;}
+  .btn.small.on{background:var(--y); color:#5a3d00;}
+  .speaker.hint-pulse{animation:pulse 1s infinite;}
   .confetti{position:fixed; top:-20px; font-size:2rem; animation:fall 1.6s linear forwards; pointer-events:none;}
   @keyframes fall{to{transform:translateY(110vh) rotate(360deg); opacity:.2}}
 </style>
@@ -99,17 +111,25 @@
   <div class="top">
     <button class="btn small ghost" onclick="go('home')">← もどる</button>
     <div class="dots" id="dots"></div>
-    <span></span>
+    <button class="btn small ghost" id="jaBtn" onclick="toggleJa()">にほんご</button>
+  </div>
+  <div class="steps" id="steps">
+    <span class="step">① 🔊を おして きく</span>
+    <span class="step">② もじを じゅんばんに おす</span>
+    <span class="step">③ ぜんぶ ならべたら できあがり</span>
   </div>
   <div class="card" style="text-align:center;">
-    <button class="speaker" onclick="sayCurrent(1)">🔊</button>
+    <button class="speaker" id="spk" onclick="sayCurrent(1)">🔊</button>
     <div style="margin-top:8px;"><button class="btn small y" onclick="sayCurrent(0.55)">🐢 ゆっくり</button></div>
+    <div class="ja" id="ja"></div>
   </div>
   <div class="card">
+    <div class="label" id="slotLabel">きこえた ことばを ここに ならべよう</div>
     <div class="slots" id="slots"></div>
   </div>
   <div class="feedback" id="feedback"></div>
   <div class="card">
+    <div class="label">👇 じゅんばんに もじを おしてね！</div>
     <div class="tiles" id="tiles"></div>
   </div>
 </section>
@@ -131,7 +151,7 @@
   <div class="top">
     <button class="btn small ghost" onclick="go('home')">← もどる</button>
     <h2 style="margin:0;">🎤 じぶんの おはなし</h2>
-    <button class="btn small ghost" onclick="typeStory()">✍️</button>
+    <span><button class="btn small ghost" id="jaBtn2" onclick="toggleJa()">にほんご</button> <button class="btn small ghost" onclick="typeStory()">✍️</button></span>
   </div>
   <div class="card storybox" id="storyBox"><span class="hint">マイクを おして、えいごで はなしてね。ことばが ここに でてくるよ。</span></div>
   <div class="row" style="margin:8px 0;">
@@ -219,6 +239,17 @@ yes yet yum yap yak zip zap zig buzz fizz jazz quiz quit quick
 chip chop chin chat much rich such shop ship shell fish dish wish bash rush thin thick this that then them moth bath path with ring sing song long king wing bang hang
 rain tail wait pain sail nail paint see feet tree bee seed deep keep sleep green sheep high night light boat goat road coat moon food zoo boot book look cook car farm park star dark hard arm fork corn horn for sort burn turn surf fur hurt cow down town owl now how coin boil join oil ear hear near hair fair pair chair pure sure her term`.split(/\s+/);
 
+/* ===== 日本語（にほんご ボタンで表示） ===== */
+const JA={at:'〜に',sat:'すわった',pat:'ぽんぽん たたく',tap:'とんとん たたく',sap:'きの しる',pit:'あな',tip:'さき',
+sit:'すわる',pin:'ピン',nap:'ひるね',man:'おとこの ひと',pan:'フライパン',dad:'パパ',sad:'かなしい',mat:'マット',dip:'ちょっと つける',map:'ちず',mad:'おこった',and:'と',sand:'すな',tin:'かん',din:'さわがしい おと',pad:'クッション',
+dog:'いぬ',cat:'ねこ',pig:'ぶた',kid:'こども',got:'もらった',cot:'ベビーベッド',cap:'ぼうし',cod:'たら（さかな）',pot:'なべ',top:'てっぺん',mop:'モップ',dig:'ほる',kit:'どうぐ セット',gap:'すきま',tag:'なふだ',can:'できる',dot:'てん',nod:'うなずく',cup:'コップ',
+ten:'じゅう（10）',pen:'ペン',red:'あか',bed:'ベッド',net:'あみ',bus:'バス',sun:'たいよう',mud:'どろ',run:'はしる',rat:'ねずみ',rug:'じゅうたん',mug:'マグカップ',sock:'くつした',duck:'あひる',kick:'ける',rock:'いわ',back:'せなか',neck:'くび',pack:'つめる',pup:'こいぬ',cut:'きる',nut:'ナッツ',
+hat:'ぼうし',hen:'めんどり',hot:'あつい',hug:'ぎゅっと だっこ',bag:'かばん',big:'おおきい',bug:'むし',fan:'せんぷうき',fit:'ぴったり',fun:'たのしい',fog:'きり',off:'けす・オフ',huff:'ふうっと いき',puff:'ぷっと ふく',leg:'あし',lip:'くちびる',log:'まるた',lot:'たくさん',bell:'ベル',doll:'にんぎょう',hill:'おか',fill:'いっぱいに する',fell:'おちた',tell:'つたえる',sell:'うる',dull:'つまらない',mess:'ちらかし',kiss:'キス',less:'より すくない',hiss:'シューッ',boss:'ボス',fuss:'おおさわぎ',lick:'なめる',lock:'かぎを かける',luck:'うん',bat:'コウモリ',bin:'ごみばこ',bud:'つぼみ',fed:'たべさせた',fin:'ひれ',fig:'いちじく',lid:'ふた',lap:'ひざ',ham:'ハム',hip:'おしり',hop:'ぴょんと とぶ',
+jam:'ジャム',jet:'ジェットき',jog:'ジョギング',jug:'みずさし',van:'バン（くるま）',vet:'どうぶつの おいしゃさん',wet:'ぬれた',win:'かつ',wig:'かつら',web:'くもの す',wax:'ろう',box:'はこ',fox:'きつね',six:'ろく（6）',mix:'まぜる',fix:'なおす',jab:'ちくっと さす',wag:'しっぽを ふる',
+yes:'はい',yet:'まだ',yum:'おいしい',yap:'キャンキャン',yak:'ヤク（うし）',zip:'ファスナー',zap:'ビビッ',zig:'ジグザグの ジグ',buzz:'ブーン',fizz:'シュワシュワ',jazz:'ジャズ',quiz:'クイズ',quit:'やめる',quick:'はやい',
+chip:'ポテト',chop:'きざむ',chin:'あご',chat:'おしゃべり',much:'たくさん',rich:'おかねもち',such:'そんな',shop:'おみせ',ship:'ふね',shell:'かいがら',fish:'さかな',dish:'おさら',wish:'ねがう',bash:'ドンと たたく',rush:'いそぐ',thin:'ほそい',thick:'あつい',this:'これ',that:'あれ',then:'それから',them:'かれらを',moth:'が（むし）',bath:'おふろ',path:'こみち',with:'いっしょに',ring:'ゆびわ',sing:'うたう',song:'うた',long:'ながい',king:'おうさま',wing:'つばさ',bang:'バン！',hang:'かける',
+rain:'あめ',tail:'しっぽ',wait:'まつ',pain:'いたみ',sail:'ほ・ふねで いく',nail:'つめ・くぎ',paint:'えのぐ',see:'みる',feet:'あし（りょうあし）',tree:'き',bee:'はち',seed:'たね',deep:'ふかい',keep:'とっておく',sleep:'ねむる',green:'みどり',sheep:'ひつじ',high:'たかい',night:'よる',light:'ひかり',boat:'ボート',goat:'やぎ',road:'みち',coat:'コート',moon:'つき',food:'たべもの',zoo:'どうぶつえん',boot:'ながぐつ',book:'ほん',look:'みる',cook:'りょうりする',car:'くるま',farm:'のうじょう',park:'こうえん',star:'ほし',dark:'くらい',hard:'かたい',arm:'うで',fork:'フォーク',corn:'とうもろこし',horn:'つの',for:'〜のために',sort:'しゅるい',burn:'もえる',turn:'まわる',surf:'サーフィン',fur:'けがわ',hurt:'いたい',cow:'うし',down:'した',town:'まち',owl:'ふくろう',now:'いま',how:'どうやって',coin:'コイン',boil:'わかす',join:'くわわる',oil:'あぶら',ear:'みみ',hear:'きく',near:'ちかい',hair:'かみの け',fair:'こうへい',pair:'ペア',chair:'いす',pure:'きれいな',sure:'もちろん',her:'かのじょの',term:'がっき'};
+
 function split(word){
   const out=[]; let i=0;
   while(i<word.length){
@@ -240,12 +271,18 @@ const S={
   get stories(){return JSON.parse(localStorage.getItem('pr_stories')||'[]');}, set stories(v){localStorage.setItem('pr_stories',JSON.stringify(v));},
   get voice(){return localStorage.getItem('pr_voice')||'';}, set voice(v){localStorage.setItem('pr_voice',v);},
   get rate(){return +(localStorage.getItem('pr_rate')||0.9);}, set rate(v){localStorage.setItem('pr_rate',v);},
+  get ja(){return localStorage.getItem('pr_ja')==='1';}, set ja(v){localStorage.setItem('pr_ja',v?'1':'0');},
 };
+function toggleJa(){ S.ja=!S.ja; renderJa(); }
+function renderJa(){
+  document.querySelectorAll('#jaBtn,#jaBtn2').forEach(b=>{b.classList.toggle('on',S.ja); b.textContent=S.ja?'にほんご ✔':'にほんご';});
+  const el=document.getElementById('ja'); if(el) el.textContent=(S.ja&&game)?(JA[game.words[game.i].w]||''):'';
+}
 const today=()=>new Date().toISOString().slice(0,10);
 function logWord(w){const l=S.log; const d=today(); l[d]=l[d]||[]; if(!l[d].includes(w)) l[d].push(w); S.log=l;}
 
 /* ===== 画面 ===== */
-function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on')); document.getElementById(id).classList.add('on'); if(id==='home') renderHome(); if(id==='parent') renderParent();}
+function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on')); document.getElementById(id).classList.add('on'); if(id==='home') renderHome(); if(id==='parent') renderParent(); if(id==='story'||id==='build') renderJa();}
 function renderHome(){const n=Object.values(S.log).reduce((a,b)=>a+b.length,0); document.getElementById('homeHint').textContent=n?`いままでに ${n}こ よめたよ`:'';}
 
 /* ===== 音声 ===== */
@@ -287,17 +324,25 @@ function nextWord(){
   const extra=learned.slice(0,Math.min(2,learned.length));
   game.tiles=[...cur.p,...extra].map((g,id)=>({g,id,used:false})).sort(()=>Math.random()-.5);
   game.slots=cur.p.map(()=>null);
-  game.ghost=false;
-  render(); document.getElementById('feedback').textContent='';
-  setTimeout(()=>sayCurrent(1),300);
+  game.ghost=false; game.heard=false;
+  render(); document.getElementById('feedback').textContent=''; renderJa();
+  setTimeout(()=>{ speak(cur.w); setTimeout(()=>{ if(game&&game.words[game.i]===cur&&!game.heard){game.heard=true; render();} },1800); },300);
 }
-function sayCurrent(rate){ if(game) speak(game.words[game.i].w, rate===1?S.rate:rate); }
+function sayCurrent(rate){ if(game){ speak(game.words[game.i].w, rate===1?S.rate:rate); game.heard=true; render(); } }
+function setStep(n){
+  document.querySelectorAll('#steps .step').forEach((el,i)=>{ el.classList.toggle('on',i+1===n); el.classList.toggle('ok',i+1<n); });
+  document.getElementById('spk').classList.toggle('hint-pulse',n===1);
+}
 function render(){
   const cur=game.words[game.i];
+  const placed=game.slots.filter(s=>s!==null).length;
+  setStep(placed>=game.slots.length?3:(placed>0||game.heard)?2:1);
+  const next=game.slots.indexOf(null);
+  document.getElementById('slotLabel').textContent=game.ghost?'うすい もじの とおりに おしてね':placed===0?'きこえた ことばを ここに ならべよう':'つぎは ここ！';
   document.getElementById('dots').innerHTML=game.words.map((_,k)=>`<div class="dot ${k<game.i?'done':k===game.i?'now':''}"></div>`).join('');
   document.getElementById('slots').innerHTML=game.slots.map((t,k)=>{
     const tile=t!==null?game.tiles.find(x=>x.id===t):null;
-    return `<div class="slot ${tile?'filled':''} ${cur.p[k].length>1?'wide':''}" onclick="unplace(${k})">${game.ghost&&!tile?`<span class="ghost">${cur.p[k]}</span>`:''}${tile?tile.g:''}</div>`;
+    return `<div class="slot ${tile?'filled':''} ${k===next?'next':''} ${cur.p[k].length>1?'wide':''}" onclick="unplace(${k})">${game.ghost&&!tile?`<span class="ghost">${cur.p[k]}</span>`:''}${tile?tile.g:''}</div>`;
   }).join('');
   document.getElementById('tiles').innerHTML=game.tiles.map(t=>`<div class="tile ${t.used?'used':''} ${t.g.length>1?'wide':''}" onclick="place(${t.id})">${t.g}</div>`).join('');
 }
@@ -347,7 +392,12 @@ function renderStory(){
   const box=document.getElementById('storyBox');
   box.innerHTML=story.length?story.map((w,i)=>`<span class="chip" id="w${i}" onclick="sayWord(${i})">${w}</span>`).join(''):'<span class="hint">マイクを おして、えいごで はなしてね。ことばが ここに でてくるよ。</span>';
 }
-function sayWord(i){ document.querySelectorAll('.chip').forEach(c=>c.classList.remove('hl')); const el=document.getElementById('w'+i); el.classList.add('hl'); speak(story[i].replace(/[^a-zA-Z']/g,''),0.8); logWord(story[i].replace(/[^a-zA-Z']/g,'').toLowerCase()); }
+function sayWord(i){
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('hl')); const el=document.getElementById('w'+i); el.classList.add('hl');
+  const w=story[i].replace(/[^a-zA-Z']/g,''); speak(w,0.8); logWord(w.toLowerCase());
+  const hint=document.getElementById('micHint');
+  hint.textContent=(S.ja&&JA[w.toLowerCase()])?`${w} ＝ ${JA[w.toLowerCase()]}`:(S.ja?`${w}（にほんごは まだ ないよ）`:'ことばを さわると よんでくれるよ');
+}
 function toggleListen(){
   const hint=document.getElementById('micHint'); const btn=document.getElementById('micBtn');
   if(!SR){ hint.textContent='この ブラウザは マイクの ききとりに たいおう していません（iPadは Safariで ひらいてね）'; return; }
