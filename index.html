@@ -62,7 +62,14 @@
   .setbtn.on{border-color:var(--g); background:#e6fff7;}
   .setbtn b{display:block; font-size:.9rem; color:var(--sub);}
   .setbtn span{font-family:"Comic Sans MS","Chalkboard SE","Segoe Print",sans-serif; font-size:1.3rem; letter-spacing:2px;}
-  .gear{position:fixed; right:14px; bottom:14px; font-size:1.6rem; opacity:.35; background:none; border:none; cursor:pointer;}
+  .gear{position:fixed; right:16px; bottom:calc(16px + env(safe-area-inset-bottom)); font-size:1.9rem; width:58px; height:58px; border-radius:50%; background:#fff; border:none; box-shadow:0 3px 10px rgba(0,0,0,.18); cursor:pointer; opacity:.85; z-index:20;}
+  .modal{position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:80;}
+  .modal.on{display:flex;}
+  .modal .box{background:#fff; border-radius:24px; padding:24px; width:min(90vw,380px); text-align:center;}
+  .modal input{font-size:2rem; width:140px; text-align:center; border:3px solid #ddd; border-radius:12px; padding:6px; font-family:inherit;}
+  .cheer{position:fixed; left:50%; top:60%; transform:translate(-50%,-50%); width:min(62vw,360px); max-height:48vh; object-fit:contain; z-index:58; pointer-events:none;
+    border-radius:28px; background:#fff; box-shadow:0 10px 40px rgba(0,0,0,.25); animation:cheerIn 1.9s ease-out forwards;}
+  @keyframes cheerIn{0%{transform:translate(-50%,-50%) scale(.2) rotate(-15deg); opacity:0}20%{transform:translate(-50%,-50%) scale(1.1) rotate(3deg); opacity:1}30%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0; transform:translate(-50%,-50%) scale(1.05)}}
   label{display:block; margin:10px 0 4px; font-weight:700;}
   select,input[type=range]{font-size:1.1rem; width:100%;}
   .list{font-size:1.1rem; line-height:1.8;}
@@ -120,8 +127,21 @@
   <button class="btn big r" onclick="go('story')">🎤 じぶんの おはなし</button>
   <button class="btn big g" onclick="showBook()">📖 ずかん</button>
   <p class="hint" id="homeHint"></p>
-  <button class="gear" id="gear">⚙️</button>
+  <button class="gear" id="gear" onclick="askParent()">⚙️</button>
 </section>
+
+<!-- おうちの人の確認（九九の問題） -->
+<div class="modal" id="gate">
+  <div class="box">
+    <h2>おうちの人の かくにん</h2>
+    <p id="gateQ" style="font-size:1.8rem; font-weight:800; margin:8px 0;"></p>
+    <input type="number" id="gateA" inputmode="numeric" pattern="[0-9]*">
+    <div class="row" style="margin-top:14px;">
+      <button class="btn g" onclick="checkGate()">OK</button>
+      <button class="btn ghost" onclick="closeGate()">やめる</button>
+    </div>
+  </div>
+</div>
 
 <!-- きいて ならべる -->
 <section id="build" class="screen">
@@ -434,6 +454,15 @@ function finish(){
   document.getElementById('prizeText').textContent=perfect?'ぜんぶ いっぱつ！ なかまが 2ひき ふえたよ':'ずかんに なかまが ふえたよ';
   go('done'); celebrate(perfect?10:3); if(perfect) speakMore('Perfect! You are a superstar!');
 }
+/* ===== 演出の絵（img/ に置けば自動で使う。無ければ出ない） ===== */
+const CHEER={1:'img/good.png',2:'img/streak2.png',3:'img/streak3.png',5:'img/streak5.png',7:'img/streak7.png',10:'img/perfect.png'};
+const cheerOK={};
+Object.entries(CHEER).forEach(([k,src])=>{ const im=new Image(); im.onload=()=>{cheerOK[k]=true;}; im.src=src; });
+function cheerImg(n){
+  const tier=n>=10?10:n>=7?7:n>=5?5:n>=3?3:n>=2?2:1;
+  if(!cheerOK[tier]) return false;
+  const im=document.createElement('img'); im.className='cheer'; im.src=CHEER[tier]; document.body.appendChild(im); setTimeout(()=>im.remove(),2000); return true;
+}
 /* ===== 演出：連続するほど派手に ===== */
 function confetti(n,set){ const e=set||['🎉','⭐','🌟','✨','🎊']; for(let i=0;i<n;i++){const d=document.createElement('div'); d.className='confetti'; d.textContent=e[i%e.length]; d.style.left=Math.random()*100+'vw'; d.style.fontSize=(1.6+Math.random()*1.4)+'rem'; d.style.animationDelay=(Math.random()*.6)+'s'; document.body.appendChild(d); setTimeout(()=>d.remove(),2400);} }
 function banner(text,big){ const b=document.createElement('div'); b.className='banner'+(big?' big':''); b.textContent=text; document.body.appendChild(b); setTimeout(()=>b.remove(),1600); }
@@ -442,6 +471,7 @@ function firework(x,y){ const cols=['#ff595e','#ffca3a','#8ac926','#1982c4','#6a
 function fireworks(k){ for(let i=0;i<k;i++){ setTimeout(()=>firework(60+Math.random()*(innerWidth-120), 80+Math.random()*(innerHeight*0.5)), i*180); } }
 function celebrate(n){
   const b=document.body;
+  cheerImg(n);
   if(n<=1){ confetti(14); return; }
   if(n===2){ confetti(26); banner('すごい！ 2れんぞく'); chime(2); return; }
   if(n<5){ confetti(40); flash(); banner(`すごい！ ${n}れんぞく！`); chime(n); b.classList.add('rainbow'); setTimeout(()=>b.classList.remove('rainbow'),1700); speakMore('Great!'); return; }
@@ -527,12 +557,21 @@ function toggleStoryList(){
 function loadStory(i){ story=S.stories[i].t.split(' '); renderStory(); document.getElementById('storyList').style.display='none'; }
 
 /* ===== おうちの人 ===== */
-let pressTimer=null;
-const gear=document.getElementById('gear');
-const startPress=e=>{e.preventDefault(); pressTimer=setTimeout(()=>go('parent'),1200);};
-const endPress=()=>clearTimeout(pressTimer);
-gear.addEventListener('touchstart',startPress,{passive:false}); gear.addEventListener('mousedown',startPress);
-['touchend','touchcancel','mouseup','mouseleave'].forEach(ev=>gear.addEventListener(ev,endPress));
+/* 歯車＝タップ→九九の問題（1年生には解けない・大人にはすぐ）。長押し方式はiPadで効かなかったので廃止（2026-10-17） */
+let gateAns=0;
+function askParent(){
+  const a=6+Math.floor(Math.random()*4), b=6+Math.floor(Math.random()*4); gateAns=a*b;
+  document.getElementById('gateQ').textContent=`${a} × ${b} = ?`;
+  const inp=document.getElementById('gateA'); inp.value='';
+  document.getElementById('gate').classList.add('on'); setTimeout(()=>inp.focus(),50);
+}
+function closeGate(){ document.getElementById('gate').classList.remove('on'); }
+function checkGate(){
+  const v=+document.getElementById('gateA').value;
+  if(v===gateAns){ closeGate(); go('parent'); }
+  else { const q=document.getElementById('gateQ'); q.textContent='ちがうよ。もういちど： '+q.textContent.replace('ちがうよ。もういちど： ',''); document.getElementById('gateA').value=''; }
+}
+document.getElementById('gateA').addEventListener('keydown',e=>{ if(e.key==='Enter') checkGate(); });
 
 function renderParent(){
   const L=S.level;
