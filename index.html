@@ -278,7 +278,7 @@
     <div class="machine" id="machine">🎰</div>
     <div class="gresult" id="gresult"></div>
     <button class="btn big p" id="spinBtn" onclick="spinGacha()">まわす（100 🪙）</button>
-    <p class="hint">どうぶつの え・コイン・レアな え が でるよ。ひいた えは ずかんに ならぶよ</p>
+    <p class="hint">どうぶつの え・コイン・レアな え が でるよ。ひいた えは ずかんに ならぶよ。おへやを ひらいていると、おへやの パーツも でるよ</p>
   </div>
 </section>
 
@@ -771,6 +771,9 @@ function spinGacha(){
   setTimeout(()=>{
     m.classList.remove('shake'); btn.disabled=false;
     const r=Math.random(); const imgs=allImgs(); const rare=imgs.filter(x=>x.tier===10); const normal=imgs.filter(x=>x.tier!==10);
+    /* おへやを開放していると、まだ持っていないお部屋のパーツが出ることがある（2026-10-18 横田さん） */
+    const o=owned(); const unowned=unlocked().includes('room')?ITEMS.filter(it=>!o[it.id]):[];
+    if(unowned.length&&r>=0.40&&r<0.60){ const it=unowned[Math.floor(Math.random()*unowned.length)]; o[it.id]={placed:true}; localStorage.setItem('pr_items',JSON.stringify(o)); res.innerHTML=`<div class="label">🏠 おへやの パーツ！</div><div class="big-emoji pop">${it.e}</div><div class="label" style="font-family:'Comic Sans MS','Chalkboard SE','Segoe Print',sans-serif; font-size:1.8rem;">${it.en}</div><div class="hint">${it.ja}（おへやに おいたよ）</div>`; speak(it.en,0.9); confetti(24); chime(4); return; }
     if(r<0.55&&normal.length){ const p=normal[Math.floor(Math.random()*normal.length)]; const c=gachaColl(); c.push(p.src); localStorage.setItem('pr_gacha',JSON.stringify(c)); res.innerHTML=`<div class="label">🎉 どうぶつの え！</div><img class="gimg" src="${p.src}">`; confetti(24); chime(4); }
     else if(r<0.78){ const n=[50,80,100,150,200,300][Math.floor(Math.random()*6)]; S.coins=S.coins+n; renderCoins(); res.innerHTML=`<div class="label">💰 コイン +${n}！</div><div class="big-emoji pop">🪙</div>`; confetti(20); coinFloat(n); }
     else if(r<0.92&&rare.length){ const p=rare[Math.floor(Math.random()*rare.length)]; const c=gachaColl(); c.push(p.src); localStorage.setItem('pr_gacha',JSON.stringify(c)); res.innerHTML=`<div class="label">👑 レア！！</div><img class="gimg rare" src="${p.src}">`; confetti(60,['👑','🌟','💎']); flash(); fireworks(4); chime(8); speakMore('Rare!'); }
