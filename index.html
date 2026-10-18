@@ -82,6 +82,31 @@
   .banner{color:#fff; text-shadow:0 4px 0 #ff6f91, 0 0 24px rgba(255,143,171,.9);} .banner.big{text-shadow:0 5px 0 #d4587c, 0 0 40px rgba(255,111,145,.95);}
   .modal .box{border:3px solid var(--line); box-shadow:0 8px 0 #ffd6e2;}
   .start-cat{width:min(60vw,300px); border-radius:36px; border:4px solid var(--line); box-shadow:0 8px 0 #ffd6e2; background:#fff;}
+  .coins{display:inline-block; background:#fff; border:3px solid var(--line); border-radius:999px; padding:6px 14px; font-weight:800; font-size:1.2rem; color:#b8860b; box-shadow:0 3px 0 var(--line);}
+  .coins.big{font-size:1.6rem; padding:8px 20px;}
+  .coinfloat{position:fixed; left:50%; top:38%; transform:translateX(-50%); font-size:2.6rem; font-weight:900; color:#f0b400; text-shadow:0 3px 0 #5a3a3a, 0 0 14px rgba(255,220,0,.8); z-index:70; pointer-events:none; animation:coinUp 1.5s ease-out forwards;}
+  @keyframes coinUp{0%{opacity:0; transform:translate(-50%,20px) scale(.6)}20%{opacity:1; transform:translate(-50%,0) scale(1.15)}100%{opacity:0; transform:translate(-50%,-90px) scale(1)}}
+  .earned{font-size:1.6rem; font-weight:800; color:#b8860b; text-align:center; margin:6px 0;}
+  /* ミニゲーム */
+  .machine{font-size:7rem; line-height:1; margin:6px 0;}
+  .gresult{min-height:60px; margin:8px 0;} .gimg{width:min(60vw,320px); border-radius:24px; border:4px solid var(--line); box-shadow:0 8px 0 #ffd6e2; background:#fff; animation:pop .6s;}
+  .gimg.rare{border-color:#f0b400; box-shadow:0 8px 0 #f0b400, 0 0 30px rgba(255,220,0,.7);}
+  .pond{position:relative; height:min(58vh,520px); background:linear-gradient(#d0f4ff,#9fe3ff); border:3px solid var(--line); border-radius:28px; overflow:hidden; margin:8px 0;}
+  .fishbtn{position:absolute; border:none; background:#fff; border-radius:999px; padding:6px 12px 6px 6px; display:flex; align-items:center; gap:6px; box-shadow:0 4px 0 rgba(0,0,0,.15); cursor:pointer; font-family:inherit; animation:swim 8s ease-in-out infinite alternate;}
+  .fishbtn:active{transform:scale(.95);} .fishemoji{font-size:2.2rem;} .fishword{font-size:1.6rem; font-weight:800; color:var(--ink); font-family:"Comic Sans MS","Chalkboard SE","Segoe Print",sans-serif;}
+  @keyframes swim{0%{transform:translateX(0)}100%{transform:translateX(22vw)}}
+  .cards{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:8px 0;}
+  .mcard{position:relative; height:92px; border:3px solid var(--line); border-radius:18px; background:var(--lav); box-shadow:0 4px 0 var(--line); cursor:pointer; font-family:inherit; font-size:1.4rem; font-weight:800; color:var(--ink); overflow:hidden;}
+  .mcard .front,.mcard .back{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:4px; text-align:center;}
+  .mcard .back{display:none; background:#fff;} .mcard .back.en{font-family:"Comic Sans MS","Chalkboard SE","Segoe Print",sans-serif; font-size:1.7rem;} .mcard .back.ja{font-size:1.2rem;}
+  .mcard.up .front,.mcard.ok .front{display:none;} .mcard.up .back,.mcard.ok .back{display:flex;} .mcard.ok{border-color:#8fd6bb; background:var(--mint);} .mcard.ok .back{background:#eefaf5;}
+  .roombox{padding:8px;} .roomfloor{position:relative; min-height:260px; background:linear-gradient(#fff6f9 55%, #ffe3b0 55%); border-radius:20px; display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:center; gap:10px; padding:12px;}
+  .roomanimal{width:min(40vw,200px); border-radius:20px; border:3px solid var(--line); background:#fff;}
+  .roomitem{font-size:3rem; background:none; border:none; cursor:pointer; filter:drop-shadow(0 3px 0 rgba(0,0,0,.15));}
+  .shop{display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:10px;}
+  .shopitem{border:3px solid #e8d9dd; border-radius:18px; background:#fff; padding:8px; cursor:pointer; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:2px; color:var(--ink);}
+  .shopitem.have{border-color:#8fd6bb; background:#eefaf5;} .se{font-size:2.4rem;} .sen{font-size:1.3rem; font-weight:800; font-family:"Comic Sans MS","Chalkboard SE","Segoe Print",sans-serif;} .sja{font-size:.95rem; color:var(--sub);} .sp{font-size:.95rem; font-weight:800; color:#b8860b;}
+  .btn.ghost small{font-size:.9rem; font-weight:700; color:#b8860b;}
   .setbtn b{display:block; font-size:.9rem; color:var(--sub);}
   .setbtn span{font-family:"Comic Sans MS","Chalkboard SE","Segoe Print",sans-serif; font-size:1.3rem; letter-spacing:2px;}
   .gear{position:fixed; right:16px; bottom:calc(16px + env(safe-area-inset-bottom)); font-size:1.9rem; width:58px; height:58px; border-radius:50%; background:#fff; border:none; box-shadow:0 3px 10px rgba(0,0,0,.18); cursor:pointer; opacity:.85; z-index:20;}
@@ -137,7 +162,7 @@
 <!-- スタート -->
 <section id="start" class="screen on">
   <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:20px;">
-    <img class="start-cat" src="img/good.png" alt="" onerror="this.style.display='none';document.getElementById('startEmoji').style.display='block'">
+    <img class="start-cat" src="img/start.png" alt="" onerror="this.style.display='none';document.getElementById('startEmoji').style.display='block'">
     <div class="big-emoji" id="startEmoji" style="display:none;">🐱📖</div>
     <h1>えいご よめた！</h1>
     <button class="btn big y" onclick="unlockAndGo()">▶ はじめる</button>
@@ -148,12 +173,18 @@
 <!-- ホーム -->
 <section id="home" class="screen">
   <h1>なにで あそぶ？</h1>
+  <div style="text-align:center; margin-bottom:6px;"><span class="coins big">🪙 0</span></div>
   <button class="btn big b" onclick="startBuild()">🎧 きいて ならべる</button>
   <button class="btn big r" onclick="go('story')">🎤 じぶんの おはなし</button>
   <button class="btn big g" onclick="showBook()">📖 ずかん</button>
+  <div class="row" style="margin:6px 0;" id="miniRow"></div>
+  <p class="hint">ミニゲームは コインで かうと あそべるよ</p>
   <p class="hint" id="homeHint"></p>
   <button class="gear" id="gear" onclick="askParent()">⚙️</button>
 </section>
+
+<!-- ミニゲームの開放・お知らせ箱 -->
+<div class="modal" id="unlockBox"></div>
 
 <!-- おうちの人の確認（九九の問題） -->
 <div class="modal" id="gate">
@@ -174,7 +205,7 @@
     <button class="btn small ghost" onclick="go('home')">← もどる</button>
     <div class="dots" id="dots"></div>
     <span class="streak" id="streak"></span>
-    <span><button class="btn small ghost" id="timerBtn" onclick="toggleTimer()">⏱ タイマー</button> <button class="btn small ghost" id="jaBtn" onclick="toggleJa()">にほんご</button></span>
+    <span><span class="coins">🪙 0</span> <button class="btn small ghost" id="timerBtn" onclick="toggleTimer()">⏱ タイマー</button> <button class="btn small ghost" id="jaBtn" onclick="toggleJa()">にほんご</button></span>
   </div>
   <div class="steps" id="steps">
     <span class="step">① 🔊を おして きく</span>
@@ -204,6 +235,8 @@
     <h1 id="doneTitle">10こ よめた！</h1>
     <div class="big-emoji pop" id="prize">🦊</div>
     <h2 id="prizeText">ずかんに なかまが ふえたよ</h2>
+    <div class="earned" id="earned"></div>
+    <div style="text-align:center; margin-bottom:8px;"><span class="coins big">🪙 0</span></div>
     <button class="btn big b" onclick="startBuild()">🎧 もういちど</button>
     <button class="btn big g" onclick="showBook()">📖 ずかんを みる</button>
     <button class="btn big ghost" onclick="go('home')">🏠 ホーム</button>
@@ -234,6 +267,64 @@
   <p class="hint">ことばを さわると よんでくれるよ</p>
 </section>
 
+<!-- ガチャ -->
+<section id="gacha" class="screen">
+  <div class="top">
+    <button class="btn small ghost" onclick="go('home')">← もどる</button>
+    <h2 style="margin:0;">🎰 ガチャ</h2>
+    <span class="coins">🪙 0</span>
+  </div>
+  <div class="card" style="text-align:center;">
+    <div class="machine" id="machine">🎰</div>
+    <div class="gresult" id="gresult"></div>
+    <button class="btn big p" id="spinBtn" onclick="spinGacha()">まわす（100 🪙）</button>
+    <p class="hint">どうぶつの え・コイン・レアな え が でるよ。ひいた えは ずかんに ならぶよ</p>
+  </div>
+</section>
+
+<!-- えいご つり -->
+<section id="fish" class="screen">
+  <div class="top">
+    <button class="btn small ghost" onclick="endFishing(true)">← もどる</button>
+    <span class="streak" id="fishScore">🐟 0</span>
+    <span><span class="coins">🪙 0</span> <span class="streak" id="fishTime">⏱ 45</span></span>
+  </div>
+  <div class="card" style="text-align:center; padding:10px;">
+    <div class="label" id="fishTarget">🔊 きこえた ことばの さかなを つかまえよう</div>
+    <button class="btn small b" onclick="sayFishTarget()">🔊 もういちど</button>
+  </div>
+  <div class="pond" id="pond"></div>
+  <div class="feedback" id="fishFb"></div>
+</section>
+
+<!-- カードめくり -->
+<section id="memory" class="screen">
+  <div class="top">
+    <button class="btn small ghost" onclick="go('home')">← もどる</button>
+    <h2 style="margin:0;">🃏 カードめくり</h2>
+    <span class="coins">🪙 0</span>
+  </div>
+  <p class="hint">えいごの カードと にほんごの カードを あわせよう（えいごは さわると よんでくれる）</p>
+  <div class="cards" id="cards"></div>
+  <div class="feedback" id="memFb"></div>
+  <div class="row"><button class="btn small y" onclick="startMemory()">🔁 もういちど（30 🪙）</button></div>
+</section>
+
+<!-- おへや -->
+<section id="room" class="screen">
+  <div class="top">
+    <button class="btn small ghost" onclick="go('home')">← もどる</button>
+    <h2 style="margin:0;">🏠 おへや</h2>
+    <span class="coins">🪙 0</span>
+  </div>
+  <div class="card roombox" id="roombox"></div>
+  <p class="hint">おみせで かった ものを さわると おへやに おいたり しまったり できるよ</p>
+  <div class="card">
+    <div class="label">🛍 おみせ</div>
+    <div class="shop" id="shop"></div>
+  </div>
+</section>
+
 <!-- ずかん -->
 <section id="book" class="screen">
   <div class="top">
@@ -256,6 +347,7 @@
     <label>学校で習った音はここまで（タップで選ぶ）</label>
     <div class="grid" id="setGrid" style="grid-template-columns:repeat(auto-fill,minmax(170px,1fr));"></div>
     <p class="hint">「きいて ならべる」に出る単語は、選んだセットまでの音だけで読める語に限られます。</p>
+    <p class="hint" id="bandHint"></p>
   </div>
   <div class="card">
     <label>読み上げの声</label>
@@ -276,8 +368,12 @@
     <div class="list" id="weekLog"></div>
   </div>
   <div class="card">
+    <label>コイン</label>
+    <div class="list" id="coinInfo"></div>
+    <p class="hint">1語正解＝習ったセット番号（1〜9）× 連続倍率（1→2→4→8→16→32、上限32）。間違い・時間切れで倍率は1に戻ります。</p>
     <div class="row">
       <button class="btn small r" onclick="resetAll()">ずかんと記録をリセット</button>
+      <button class="btn small ghost" onclick="if(confirm('コインを0にします。よろしいですか？')){S.coins=0;renderCoins();renderParent();}">コインを0に</button>
     </div>
   </div>
 </section>
@@ -343,7 +439,14 @@ const S={
   get ja(){return localStorage.getItem('pr_ja')==='1';}, set ja(v){localStorage.setItem('pr_ja',v?'1':'0');},
   get timer(){return localStorage.getItem('pr_timer')==='1';}, set timer(v){localStorage.setItem('pr_timer',v?'1':'0');},
   get timerSec(){return +(localStorage.getItem('pr_timersec')||15);}, set timerSec(v){localStorage.setItem('pr_timersec',v);},
+  get coins(){return +(localStorage.getItem('pr_coins')||0);}, set coins(v){localStorage.setItem('pr_coins',Math.max(0,Math.floor(v)));},
 };
+/* ===== コイン（2026-10-18 横田さん）＝1語正解ごとに レベル × 連続倍率。倍率は1→2→4→8→16→32（上限32）。間違い・時間切れで1に戻る ===== */
+const COIN_CAP=32;
+function coinMult(streak){ return Math.min(COIN_CAP, Math.pow(2, Math.max(0,streak-1))); }
+function coinEarn(streak){ return S.level*coinMult(streak); }
+function renderCoins(){ document.querySelectorAll('.coins').forEach(el=>el.textContent='🪙 '+S.coins.toLocaleString()); }
+function coinFloat(n){ const d=document.createElement('div'); d.className='coinfloat'; d.textContent=`+${n} 🪙`; document.body.appendChild(d); setTimeout(()=>d.remove(),1500); }
 function toggleJa(){ S.ja=!S.ja; renderJa(); }
 function renderJa(){
   document.querySelectorAll('#jaBtn,#jaBtn2').forEach(b=>{b.classList.toggle('on',S.ja); b.textContent=S.ja?'にほんご ✔':'にほんご';});
@@ -354,7 +457,7 @@ function logWord(w){const l=S.log; const d=today(); l[d]=l[d]||[]; if(!l[d].incl
 
 /* ===== 画面 ===== */
 function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on')); document.getElementById(id).classList.add('on'); if(id==='home') renderHome(); if(id==='parent') renderParent(); if(id==='story'||id==='build') renderJa(); if(id==='build') renderTimerBtn(); else { if(typeof stopTimer==='function') stopTimer(); }}
-function renderHome(){const n=Object.values(S.log).reduce((a,b)=>a+b.length,0); document.getElementById('homeHint').textContent=n?`いままでに ${n}こ よめたよ`:'';}
+function renderHome(){const n=Object.values(S.log).reduce((a,b)=>a+b.length,0); document.getElementById('homeHint').textContent=n?`いままでに ${n}こ よめたよ`:''; renderCoins(); renderMini();}
 
 /* ===== 音声 ===== */
 let voices=[];
@@ -404,7 +507,8 @@ function pickWords(){
   return chosen.sort(()=>Math.random()-.5).slice(0,10);
 }
 function startBuild(){
-  game={words:pickWords(),i:0,tries:0,slots:[],tiles:[],streak:0,first:[]};
+  game={words:pickWords(),i:0,tries:0,slots:[],tiles:[],streak:0,first:[],earned:0};
+  preloadBand(bandOf(S.level));
   go('build'); nextWord();
 }
 function nextWord(){
@@ -455,6 +559,7 @@ function check(){
     const firstTry=game.tries===0; game.first[game.i]=firstTry;
     game.streak=firstTry?game.streak+1:0;
     fb.textContent='⭐ よめた！ '+cur.w; logWord(cur.w); speak(cur.w); render();
+    const earn=coinEarn(game.streak); S.coins=S.coins+earn; game.earned=(game.earned||0)+earn; renderCoins(); coinFloat(earn);
     document.getElementById('slots').classList.add('pop');
     const proceed=()=>{ if(!game||game.words[game.i]!==cur) return; document.getElementById('slots').classList.remove('pop'); game.i++; if(game.i>=game.words.length) finish(); else nextWord(); };
     const shown=celebrate(game.streak,proceed);
@@ -477,20 +582,38 @@ function finish(){
   document.getElementById('prize').textContent=got.join(' ');
   document.getElementById('doneTitle').textContent=perfect?'🏆 パーフェクト！！':'10こ よめた！';
   document.getElementById('prizeText').textContent=perfect?'ぜんぶ いっぱつ！ なかまが 2ひき ふえたよ':'ずかんに なかまが ふえたよ';
+  document.getElementById('earned').textContent=`こんかい +${(game.earned||0).toLocaleString()} 🪙`; renderCoins();
   go('done'); celebrate(perfect?10:3); if(perfect) speakMore('Perfect! You are a superstar!');
 }
-/* ===== 演出の絵（img/ に置けば自動で使う。無ければ出ない） ===== */
-const CHEER={1:'img/good.png',2:'img/streak2.png',3:'img/streak3.png',5:'img/streak5.png',7:'img/streak7.png',10:'img/perfect.png'};
-const cheerOK={};
-Object.entries(CHEER).forEach(([k,src])=>{ const im=new Image(); im.onload=()=>{cheerOK[k]=true;}; im.src=src; });
+/* ===== 演出の絵のプール（img/manifest.json＝帯（動物）×段階×複数枚。毎回ランダム・直前と同じ絵は避ける） =====
+   帯＝習ったセット（1〜9）そのもの。レベルごとに動物が1匹（2026-10-18 横田さん「レベルに応じて動物を変える・種類を増やしてランダム・全レベルに一つの動物」） */
+let POOL=null; const preloaded={}; let lastCheer='';
+fetch('img/manifest.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(j=>{ POOL=j; preloadBand(bandOf(S.level)); setStartImg(); }).catch(()=>{});
+function bandOf(level){ return String(Math.min(9,Math.max(1,level))); }
+function bandName(level){ const b=POOL&&POOL.bands[bandOf(level)]; return b?b.name:''; }
+function poolFor(level,tier){ /* その帯のその段階。無ければ同じ帯の下の段階→他の帯の同じ段階の順に探す */
+  if(!POOL) return [];
+  const order=['10','7','5','3','2','1']; const t=String(tier); const b=bandOf(level);
+  const get=(bb,tt)=>((POOL.bands[bb]||{}).tiers||{})[tt]||[];
+  if(get(b,t).length) return get(b,t);
+  for(const tt of order.slice(order.indexOf(t)+1)) if(get(b,tt).length) return get(b,tt);
+  const near=[]; for(let d=1; d<=8; d++){ if(+b-d>=1) near.push(String(+b-d)); if(+b+d<=9) near.push(String(+b+d)); }
+  for(const bb of near){ if(get(bb,t).length) return get(bb,t); }
+  for(const bb of near){ for(const tt of order) if(get(bb,tt).length) return get(bb,tt); }
+  return [];
+}
+function pickFrom(list){ if(!list.length) return ''; let c=list[Math.floor(Math.random()*list.length)]; if(list.length>1&&c===lastCheer) c=list[(list.indexOf(c)+1)%list.length]; lastCheer=c; return c; }
+function preloadBand(b){ if(!POOL||preloaded[b]) return; preloaded[b]=true; Object.values((POOL.bands[b]||{}).tiers||{}).flat().forEach(src=>{ const im=new Image(); im.src=src; }); }
+function setStartImg(){ const el=document.querySelector('.start-cat'); const src=pickFrom(poolFor(S.level,1)); if(el&&src) el.src=src; }
 /* 絵はタッチ／クリックされるまで出続ける（2026-10-18 横田さん）。消えたら onDone を呼ぶ */
 let cheerDone=null;
 function cheerImg(n,onDone){
   const tier=n>=10?10:n>=7?7:n>=5?5:n>=3?3:n>=2?2:1;
-  if(!cheerOK[tier]) return false;
+  const src=pickFrom(poolFor(S.level,tier));
+  if(!src) return false;
   document.querySelectorAll('.cheer-wrap').forEach(w=>w.remove());
   const wrap=document.createElement('div'); wrap.className='cheer-wrap';
-  const im=document.createElement('img'); im.className='cheer'; im.src=CHEER[tier];
+  const im=document.createElement('img'); im.className='cheer'; im.src=src;
   const hint=document.createElement('div'); hint.className='cheer-hint'; hint.textContent='👆 さわると つぎへ';
   wrap.appendChild(im); wrap.appendChild(hint); document.body.appendChild(wrap);
   cheerDone=onDone||null;
@@ -533,7 +656,9 @@ function showBook(){
   const c=S.coll; const n=Object.values(S.log).reduce((a,b)=>a+b.length,0);
   document.getElementById('bookStats').textContent=`なかま ${c.length}ひき ／ よめた ことば ${n}こ`;
   const cnt={}; c.forEach(x=>cnt[x.a]=(cnt[x.a]||0)+1);
-  document.getElementById('bookGrid').innerHTML=Object.keys(cnt).length?Object.entries(cnt).map(([a,k])=>`<div class="cell">${a}<small>×${k}</small></div>`).join(''):'<p class="hint">「きいて ならべる」で 10こ よめると なかまが ふえるよ</p>';
+  const gc={}; gachaColl().forEach(s=>gc[s]=(gc[s]||0)+1);
+  document.getElementById('bookGrid').innerHTML=(Object.keys(cnt).length?Object.entries(cnt).map(([a,k])=>`<div class="cell">${a}<small>×${k}</small></div>`).join(''):'<p class="hint">「きいて ならべる」で 10こ よめると なかまが ふえるよ</p>')
+    +Object.entries(gc).map(([s,k])=>`<div class="cell"><img src="${s}" style="width:100%; border-radius:14px;"><small>×${k}</small></div>`).join('');
   go('book');
 }
 
@@ -592,6 +717,115 @@ function toggleStoryList(){
 }
 function loadStory(i){ story=S.stories[i].t.split(' '); renderStory(); document.getElementById('storyList').style.display='none'; }
 
+/* ===== ミニゲーム（2026-10-18 横田さん＝ガチャ・おへや・えいごつり・カードめくり。最初は🔒でコインで買って開放） ===== */
+const MINI=[
+  {id:'gacha', label:'🎰 ガチャ', price:200, cls:'p', open:()=>go('gacha')},
+  {id:'fish',  label:'🎣 えいご つり', price:400, cls:'y', open:()=>startFishing()},
+  {id:'memory',label:'🃏 カードめくり', price:700, cls:'b', open:()=>startMemory()},
+  {id:'room',  label:'🏠 おへや', price:1000, cls:'r', open:()=>openRoom()},
+];
+const unlocked=()=>JSON.parse(localStorage.getItem('pr_unlocked')||'[]');
+function renderMini(){
+  const u=unlocked();
+  document.getElementById('miniRow').innerHTML=MINI.map(m=>u.includes(m.id)
+    ?`<button class="btn ${m.cls}" onclick="MINI.find(x=>x.id==='${m.id}').open()">${m.label}</button>`
+    :`<button class="btn ghost" onclick="askUnlock('${m.id}')">🔒 ${m.label}<br><small>${m.price} 🪙で かう</small></button>`).join('');
+}
+function askUnlock(id){
+  const m=MINI.find(x=>x.id===id); const box=document.getElementById('unlockBox');
+  if(S.coins<m.price){ box.innerHTML=`<div class="box"><h2>${m.label}</h2><p style="font-size:1.3rem;">コインが たりないよ。<br>あと <b>${(m.price-S.coins).toLocaleString()}</b> 🪙 ためよう！</p><div class="row"><button class="btn ghost" onclick="closeUnlock()">わかった</button></div></div>`; }
+  else { box.innerHTML=`<div class="box"><h2>${m.label}</h2><p style="font-size:1.3rem;"><b>${m.price}</b> 🪙 つかって あそべるように する？<br><small>（いま ${S.coins.toLocaleString()} 🪙）</small></p><div class="row"><button class="btn g" onclick="doUnlock('${id}')">かう！</button><button class="btn ghost" onclick="closeUnlock()">やめる</button></div></div>`; }
+  box.classList.add('on');
+}
+function closeUnlock(){ document.getElementById('unlockBox').classList.remove('on'); }
+function doUnlock(id){ const m=MINI.find(x=>x.id===id); if(S.coins<m.price) return; S.coins=S.coins-m.price; const u=unlocked(); u.push(id); localStorage.setItem('pr_unlocked',JSON.stringify(u)); closeUnlock(); renderCoins(); renderMini(); confetti(30); chime(5); speakMore('Unlocked!'); setTimeout(()=>m.open(),600); }
+function spend(n){ if(S.coins<n){ return false; } S.coins=S.coins-n; renderCoins(); return true; }
+function allImgs(){ if(!POOL) return []; return Object.values(POOL.bands).flatMap(b=>Object.entries(b.tiers).flatMap(([t,l])=>l.map(src=>({src,tier:+t})))); }
+
+/* --- ガチャ --- */
+const gachaColl=()=>JSON.parse(localStorage.getItem('pr_gacha')||'[]');
+function spinGacha(){
+  const res=document.getElementById('gresult'); const btn=document.getElementById('spinBtn');
+  if(!spend(100)){ res.innerHTML='<p style="font-size:1.3rem;">コインが たりないよ（100 🪙 いるよ）</p>'; return; }
+  btn.disabled=true; res.innerHTML=''; const m=document.getElementById('machine'); m.classList.add('shake'); chime(3);
+  setTimeout(()=>{
+    m.classList.remove('shake'); btn.disabled=false;
+    const r=Math.random(); const imgs=allImgs(); const rare=imgs.filter(x=>x.tier===10); const normal=imgs.filter(x=>x.tier!==10);
+    if(r<0.55&&normal.length){ const p=normal[Math.floor(Math.random()*normal.length)]; const c=gachaColl(); c.push(p.src); localStorage.setItem('pr_gacha',JSON.stringify(c)); res.innerHTML=`<div class="label">🎉 どうぶつの え！</div><img class="gimg" src="${p.src}">`; confetti(24); chime(4); }
+    else if(r<0.78){ const n=[50,80,100,150,200,300][Math.floor(Math.random()*6)]; S.coins=S.coins+n; renderCoins(); res.innerHTML=`<div class="label">💰 コイン +${n}！</div><div class="big-emoji pop">🪙</div>`; confetti(20); coinFloat(n); }
+    else if(r<0.92&&rare.length){ const p=rare[Math.floor(Math.random()*rare.length)]; const c=gachaColl(); c.push(p.src); localStorage.setItem('pr_gacha',JSON.stringify(c)); res.innerHTML=`<div class="label">👑 レア！！</div><img class="gimg rare" src="${p.src}">`; confetti(60,['👑','🌟','💎']); flash(); fireworks(4); chime(8); speakMore('Rare!'); }
+    else { S.coins=S.coins+20; renderCoins(); res.innerHTML=`<div class="label">ざんねん… 20 🪙 かえってきた</div><div class="big-emoji">🫧</div>`; }
+  },1300);
+}
+
+/* --- えいご つり --- */
+let fishing=null;
+function fishWords(n){ const pool=BANK.filter(b=>b.level<=S.level).sort(()=>Math.random()-.5); return pool.slice(0,n); }
+function startFishing(){
+  if(!spend(30)){ alertBox('🎣 えいご つり','1かい 30 🪙 いるよ。コインを ためてね'); return; }
+  fishing={score:0,time:45,words:fishWords(6),target:null,tick:null};
+  go('fish'); renderPond(); nextTarget();
+  fishing.tick=setInterval(()=>{ fishing.time--; document.getElementById('fishTime').textContent='⏱ '+fishing.time; if(fishing.time<=0) endFishing(false); },1000);
+}
+function renderPond(){
+  const pond=document.getElementById('pond'); pond.innerHTML='';
+  fishing.words.forEach((w,i)=>{ const f=document.createElement('button'); f.className='fishbtn'; f.style.top=(8+Math.random()*70)+'%'; f.style.left=(5+Math.random()*70)+'%'; f.style.animationDuration=(6+Math.random()*6)+'s'; f.style.animationDelay=(-Math.random()*6)+'s'; f.innerHTML=`<span class="fishemoji">${['🐟','🐠','🐡','🦈','🐙','🦑'][i%6]}</span><span class="fishword">${w.w}</span>`; f.onclick=()=>catchFish(i); pond.appendChild(f); });
+  document.getElementById('fishScore').textContent='🐟 '+fishing.score;
+}
+function nextTarget(){ const list=fishing.words; fishing.target=list[Math.floor(Math.random()*list.length)]; document.getElementById('fishTarget').textContent='🔊 きこえた ことばの さかなを つかまえよう'; sayFishTarget(); }
+function sayFishTarget(){ if(fishing&&fishing.target) speak(fishing.target.w,0.9); }
+function catchFish(i){
+  if(!fishing) return; const w=fishing.words[i]; const fb=document.getElementById('fishFb');
+  if(w===fishing.target){ fishing.score++; logWord(w.w); fb.textContent='🎣 つれた！ '+w.w+(S.ja&&JA[w.w]?'＝'+JA[w.w]:''); chime(3); confetti(10);
+    const fresh=BANK.filter(b=>b.level<=S.level&&!fishing.words.includes(b)); fishing.words[i]=fresh[Math.floor(Math.random()*fresh.length)]||w; renderPond(); nextTarget(); }
+  else { fb.textContent='ちがう さかなだよ。もういちど きいてね'; fishing.time=Math.max(1,fishing.time-3); sayFishTarget(); }
+}
+function endFishing(quit){
+  if(!fishing) { go('home'); return; } clearInterval(fishing.tick); const sc=fishing.score; fishing=null;
+  if(quit){ go('home'); return; }
+  const earn=sc*8; S.coins=S.coins+earn; renderCoins();
+  alertBox('🎣 おしまい！',`${sc}びき つれた！ コイン +${earn} 🪙`,()=>go('home')); if(sc>=6){ confetti(40); chime(6); }
+}
+
+/* --- カードめくり --- */
+let mem=null;
+function startMemory(){
+  if(!spend(30)){ alertBox('🃏 カードめくり','1かい 30 🪙 いるよ。コインを ためてね'); return; }
+  const words=BANK.filter(b=>b.level<=S.level&&JA[b.w]).sort(()=>Math.random()-.5).slice(0,6);
+  const cards=words.flatMap(w=>[{k:w.w,t:'en',txt:w.w},{k:w.w,t:'ja',txt:JA[w.w]}]).sort(()=>Math.random()-.5);
+  mem={cards,open:[],done:0,lock:false,tries:0};
+  go('memory'); document.getElementById('memFb').textContent='';
+  document.getElementById('cards').innerHTML=cards.map((c,i)=>`<button class="mcard" id="mc${i}" onclick="flipCard(${i})"><span class="front">❓</span><span class="back ${c.t}">${c.txt}</span></button>`).join('');
+}
+function flipCard(i){
+  if(!mem||mem.lock) return; const el=document.getElementById('mc'+i); if(el.classList.contains('up')||el.classList.contains('ok')) return;
+  el.classList.add('up'); const c=mem.cards[i]; if(c.t==='en') speak(c.txt,0.9); mem.open.push(i);
+  if(mem.open.length===2){
+    mem.lock=true; mem.tries++; const [a,b]=mem.open.map(k=>mem.cards[k]);
+    setTimeout(()=>{
+      if(a.k===b.k&&a.t!==b.t){ mem.open.forEach(k=>{document.getElementById('mc'+k).classList.add('ok');}); mem.done++; logWord(a.k); S.coins=S.coins+10; renderCoins(); coinFloat(10); chime(3);
+        if(mem.done===6){ S.coins=S.coins+30; renderCoins(); document.getElementById('memFb').textContent=`🎉 ぜんぶ そろった！ ボーナス +30 🪙`; confetti(40); chime(8); speakMore('Great job!'); } }
+      else { mem.open.forEach(k=>document.getElementById('mc'+k).classList.remove('up')); }
+      mem.open=[]; mem.lock=false;
+    },900);
+  }
+}
+
+/* --- おへや（おみせで買って かざる） --- */
+const ITEMS=[{id:'bed',e:'🛏️',en:'bed',ja:'ベッド',p:120},{id:'chair',e:'🪑',en:'chair',ja:'いす',p:80},{id:'lamp',e:'🪔',en:'lamp',ja:'ランプ',p:90},{id:'plant',e:'🪴',en:'plant',ja:'しょくぶつ',p:100},{id:'hat',e:'🎩',en:'hat',ja:'ぼうし',p:150},{id:'ribbon',e:'🎀',en:'ribbon',ja:'リボン',p:150},{id:'ball',e:'⚽',en:'ball',ja:'ボール',p:60},{id:'book',e:'📚',en:'book',ja:'ほん',p:70},{id:'cake',e:'🎂',en:'cake',ja:'ケーキ',p:200},{id:'star',e:'⭐',en:'star',ja:'ほし',p:250},{id:'clock',e:'⏰',en:'clock',ja:'とけい',p:110},{id:'fish',e:'🐟',en:'fish',ja:'さかな',p:130},{id:'car',e:'🚗',en:'car',ja:'くるま',p:300},{id:'rainbow',e:'🌈',en:'rainbow',ja:'にじ',p:500}];
+const owned=()=>JSON.parse(localStorage.getItem('pr_items')||'{}'); /* {id:{placed:true}} */
+function openRoom(){ go('room'); renderRoom(); }
+function renderRoom(){
+  const o=owned(); const animal=pickFrom(poolFor(S.level,1));
+  document.getElementById('roombox').innerHTML=`<div class="roomfloor">${animal?`<img class="roomanimal" src="${animal}">`:'<div class="big-emoji">🐱</div>'}${Object.entries(o).filter(([id,v])=>v.placed).map(([id])=>{const it=ITEMS.find(x=>x.id===id); return `<button class="roomitem" onclick="toggleItem('${id}')" title="${it.en}">${it.e}</button>`;}).join('')}</div>`;
+  document.getElementById('shop').innerHTML=ITEMS.map(it=>{ const have=o[it.id]; return `<button class="shopitem ${have?'have':''}" onclick="${have?`toggleItem('${it.id}')`:`buyItem('${it.id}')`}"><span class="se">${it.e}</span><span class="sen">${it.en}</span><span class="sja">${it.ja}</span><span class="sp">${have?(o[it.id].placed?'おへやに ある':'しまってある'):it.p+' 🪙'}</span></button>`; }).join('');
+}
+function buyItem(id){ const it=ITEMS.find(x=>x.id===id); speak(it.en,0.9); if(!spend(it.p)){ document.getElementById('shop').querySelector(`button[onclick="buyItem('${id}')"]`).classList.add('shake'); setTimeout(()=>renderRoom(),500); return; } const o=owned(); o[id]={placed:true}; localStorage.setItem('pr_items',JSON.stringify(o)); confetti(16); chime(4); renderRoom(); }
+function toggleItem(id){ const o=owned(); if(!o[id]) return; o[id].placed=!o[id].placed; localStorage.setItem('pr_items',JSON.stringify(o)); const it=ITEMS.find(x=>x.id===id); speak(it.en,0.9); renderRoom(); }
+
+/* --- 共通のお知らせ箱 --- */
+function alertBox(title,msg,onClose){ const box=document.getElementById('unlockBox'); box.innerHTML=`<div class="box"><h2>${title}</h2><p style="font-size:1.3rem;">${msg}</p><div class="row"><button class="btn g" onclick="closeUnlock();(${onClose?'true':'false'})&&window.__ac&&window.__ac()">OK</button></div></div>`; window.__ac=onClose||null; box.classList.add('on'); }
+
 /* ===== おうちの人 ===== */
 /* 歯車＝タップ→九九の問題（1年生には解けない・大人にはすぐ）。長押し方式はiPadで効かなかったので廃止（2026-10-17） */
 let gateAns=0;
@@ -611,11 +845,13 @@ document.getElementById('gateA').addEventListener('keydown',e=>{ if(e.key==='Ent
 
 function renderParent(){
   const L=S.level;
-  document.getElementById('setGrid').innerHTML=SETS.map((s,i)=>`<button class="setbtn ${i<L?'on':''}" onclick="S.level=${i+1};renderParent()"><b>セット${i+1}</b><span>${s.g.join(' ')}</span></button>`).join('');
+  document.getElementById('setGrid').innerHTML=SETS.map((s,i)=>`<button class="setbtn ${i<L?'on':''}" onclick="S.level=${i+1};renderParent();setStartImg();preloadBand(bandOf(S.level))"><b>セット${i+1}</b><span>${s.g.join(' ')}</span></button>`).join('');
+  const bn=bandName(L); document.getElementById('bandHint').textContent=bn?`ごほうびの絵: いまは「${bn}」（セットごとに動物が変わります: ひよこ→うさぎ→ハムスター→ペンギン→パンダ→コアラ→きりん→三毛猫→白い子猫）`:'';
   fillVoiceSel();
   const r=document.getElementById('rate'); r.value=S.rate; document.getElementById('rateVal').textContent=S.rate.toFixed(2);
   r.oninput=()=>{S.rate=+r.value; document.getElementById('rateVal').textContent=S.rate.toFixed(2);};
   const ts=document.getElementById('timerSec'); ts.value=String(S.timerSec); ts.onchange=()=>{S.timerSec=+ts.value;};
+  document.getElementById('coinInfo').textContent=`いまの残高 ${S.coins.toLocaleString()} 🪙（いまのセットだと 1語 ${S.level}〜${S.level*COIN_CAP} 🪙）`;
   const l=S.log; const t=l[today()]||[];
   document.getElementById('todayWords').textContent=t.length?t.join('　'):'まだありません';
   const days=Object.keys(l).sort().reverse().slice(0,7);
