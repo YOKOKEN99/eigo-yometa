@@ -102,6 +102,10 @@
   .mcard.up .front,.mcard.ok .front{display:none;} .mcard.up .back,.mcard.ok .back{display:flex;} .mcard.ok{border-color:#8fd6bb; background:var(--mint);} .mcard.ok .back{background:#eefaf5;}
   .roombox{padding:8px;} .roomfloor{position:relative; min-height:260px; background:linear-gradient(#fff6f9 55%, #ffe3b0 55%); border-radius:20px; display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:center; gap:10px; padding:12px;}
   .roomanimal{width:min(40vw,200px); border-radius:20px; border:3px solid var(--line); background:#fff;}
+  .roomfloor{position:relative; min-height:320px; overflow:hidden;}
+  .pet{position:absolute; left:0; top:0; width:90px; height:90px; object-fit:contain; border-radius:18px; background:#fff; border:3px solid var(--line); box-shadow:0 4px 0 rgba(0,0,0,.15); cursor:pointer; z-index:5; will-change:transform;}
+  .pet.petemoji{display:flex; align-items:center; justify-content:center; font-size:3rem;}
+  .pet.hop{animation:hop .5s;} @keyframes hop{0%{margin-top:0}40%{margin-top:-28px}100%{margin-top:0}}
   .roomitem{font-size:3rem; background:none; border:none; cursor:pointer; filter:drop-shadow(0 3px 0 rgba(0,0,0,.15));}
   .shop{display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:10px;}
   .shopitem{border:3px solid #e8d9dd; border-radius:18px; background:#fff; padding:8px; cursor:pointer; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:2px; color:var(--ink);}
@@ -469,7 +473,7 @@ const today=()=>new Date().toISOString().slice(0,10);
 function logWord(w){const l=S.log; const d=today(); l[d]=l[d]||[]; if(!l[d].includes(w)) l[d].push(w); S.log=l;}
 
 /* ===== 画面 ===== */
-function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on')); document.getElementById(id).classList.add('on'); if(id==='home') renderHome(); if(id==='parent') renderParent(); if(id==='story'||id==='build') renderJa(); if(id==='build') renderTimerBtn(); else { if(typeof stopTimer==='function') stopTimer(); }}
+function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on')); document.getElementById(id).classList.add('on'); if(id==='home') renderHome(); if(id==='parent') renderParent(); if(id==='story'||id==='build') renderJa(); if(id==='build') renderTimerBtn(); else { if(typeof stopTimer==='function') stopTimer(); } if(id!=='room'&&typeof stopPets==='function') stopPets();}
 function renderHome(){const n=Object.values(S.log).reduce((a,b)=>a+b.length,0); document.getElementById('homeHint').textContent=n?`いままでに ${n}こ よめたよ`:''; renderCoins(); renderMini();}
 
 /* ===== 音声 ===== */
@@ -834,17 +838,51 @@ function flipCard(i){
   }
 }
 
+/* --- おへやのペット（2026-10-18 お子さんのオーダー「ペットを追加して」＝お部屋の中を歩き回る） --- */
+const PETS=[{id:'pet_chick',band:'1',en:'chick',ja:'ひよこ',p:300,e:'🐤'},{id:'pet_rabbit',band:'2',en:'rabbit',ja:'うさぎ',p:350,e:'🐰'},{id:'pet_hamster',band:'3',en:'hamster',ja:'ハムスター',p:400,e:'🐹'},{id:'pet_penguin',band:'4',en:'penguin',ja:'ペンギン',p:450,e:'🐧'},{id:'pet_panda',band:'5',en:'panda',ja:'パンダ',p:500,e:'🐼'},{id:'pet_koala',band:'6',en:'koala',ja:'コアラ',p:550,e:'🐨'},{id:'pet_giraffe',band:'7',en:'giraffe',ja:'きりん',p:600,e:'🦒'},{id:'pet_cat',band:'8',en:'cat',ja:'ねこ',p:700,e:'🐱'},{id:'pet_kitten',band:'9',en:'kitten',ja:'こねこ',p:800,e:'🐈'}];
+function petImg(pet){ const b=POOL&&POOL.bands[pet.band]; const list=b?((b.tiers['1']||[]).concat(b.tiers['2']||[])):[]; return list.length?list[0]:''; }
+let petAnim=null; let petState=[];
+function startPets(){
+  stopPets(); const floor=document.querySelector('.roomfloor'); if(!floor) return;
+  const els=[...floor.querySelectorAll('.pet')]; if(!els.length) return;
+  const W=floor.clientWidth, H=floor.clientHeight;
+  petState=els.map(el=>{ const s={el,x:Math.random()*(W-90),y:H*0.45+Math.random()*(H*0.45-90),tx:0,ty:0,sp:0.6+Math.random()*0.7,dir:1,t:Math.random()*100,rest:0}; pick(s,W,H); return s; });
+  function pick(s,W,H){ s.tx=Math.random()*(W-90); s.ty=H*0.45+Math.random()*(H*0.45-90); s.rest=0; }
+  function frame(){
+    if(!document.getElementById('room').classList.contains('on')){ stopPets(); return; }
+    const W=floor.clientWidth, H=floor.clientHeight;
+    petState.forEach(s=>{
+      s.t+=0.15;
+      if(s.rest>0){ s.rest--; }
+      else{
+        const dx=s.tx-s.x, dy=s.ty-s.y, d=Math.hypot(dx,dy);
+        if(d<3){ s.rest=40+Math.random()*120; pick(s,W,H); }
+        else{ s.x+=dx/d*s.sp; s.y+=dy/d*s.sp; if(Math.abs(dx)>1) s.dir=dx>0?1:-1; }
+      }
+      const bob=s.rest>0?0:Math.abs(Math.sin(s.t))*6;
+      s.el.style.transform=`translate(${s.x}px,${s.y-bob}px) scaleX(${s.dir})`;
+    });
+  }
+  petAnim=setInterval(frame,40);
+}
+function stopPets(){ if(petAnim){ clearInterval(petAnim); petAnim=null; } }
+function pokePet(id){ const pet=PETS.find(p=>p.id===id); const s=petState.find(x=>x.el.dataset.id===id); if(s){ s.rest=30; s.el.classList.remove('hop'); void s.el.offsetWidth; s.el.classList.add('hop'); } if(pet){ speak(pet.en,0.9); } chime(2); }
+function buyPet(id){ const pet=PETS.find(p=>p.id===id); speak(pet.en,0.9); if(!spend(pet.p)){ renderRoom(); return; } const o=owned(); o[id]={placed:true}; localStorage.setItem('pr_items',JSON.stringify(o)); confetti(24); chime(5); renderRoom(); }
+
 /* --- おへや（おみせで買って かざる） --- */
 const ITEMS=[{id:'bed',e:'🛏️',en:'bed',ja:'ベッド',p:120},{id:'chair',e:'🪑',en:'chair',ja:'いす',p:80},{id:'lamp',e:'🪔',en:'lamp',ja:'ランプ',p:90},{id:'plant',e:'🪴',en:'plant',ja:'しょくぶつ',p:100},{id:'hat',e:'🎩',en:'hat',ja:'ぼうし',p:150},{id:'ribbon',e:'🎀',en:'ribbon',ja:'リボン',p:150},{id:'ball',e:'⚽',en:'ball',ja:'ボール',p:60},{id:'book',e:'📚',en:'book',ja:'ほん',p:70},{id:'cake',e:'🎂',en:'cake',ja:'ケーキ',p:200},{id:'star',e:'⭐',en:'star',ja:'ほし',p:250},{id:'clock',e:'⏰',en:'clock',ja:'とけい',p:110},{id:'fish',e:'🐟',en:'fish',ja:'さかな',p:130},{id:'car',e:'🚗',en:'car',ja:'くるま',p:300},{id:'rainbow',e:'🌈',en:'rainbow',ja:'にじ',p:500}];
 const owned=()=>JSON.parse(localStorage.getItem('pr_items')||'{}'); /* {id:{placed:true}} */
 function openRoom(){ go('room'); renderRoom(); }
 function renderRoom(){
   const o=owned(); const animal=pickFrom(poolFor(S.level,1));
-  document.getElementById('roombox').innerHTML=`<div class="roomfloor">${animal?`<img class="roomanimal" src="${animal}">`:'<div class="big-emoji">🐱</div>'}${Object.entries(o).filter(([id,v])=>v.placed).map(([id])=>{const it=ITEMS.find(x=>x.id===id); return `<button class="roomitem" onclick="toggleItem('${id}')" title="${it.en}">${it.e}</button>`;}).join('')}</div>`;
-  document.getElementById('shop').innerHTML=ITEMS.map(it=>{ const have=o[it.id]; return `<button class="shopitem ${have?'have':''}" onclick="${have?`toggleItem('${it.id}')`:`buyItem('${it.id}')`}"><span class="se">${it.e}</span><span class="sen">${it.en}</span><span class="sja">${it.ja}</span><span class="sp">${have?(o[it.id].placed?'おへやに ある':'しまってある'):it.p+' 🪙'}</span></button>`; }).join('');
+  const petsHtml=PETS.filter(p=>o[p.id]&&o[p.id].placed).map(p=>{ const src=petImg(p); return src?`<img class="pet" data-id="${p.id}" src="${src}" onclick="pokePet('${p.id}')" alt="${p.en}">`:`<div class="pet petemoji" data-id="${p.id}" onclick="pokePet('${p.id}')">${p.e}</div>`; }).join('');
+  document.getElementById('roombox').innerHTML=`<div class="roomfloor">${animal?`<img class="roomanimal" src="${animal}">`:'<div class="big-emoji">🐱</div>'}${Object.entries(o).filter(([id,v])=>v.placed&&ITEMS.find(x=>x.id===id)).map(([id])=>{const it=ITEMS.find(x=>x.id===id); return `<button class="roomitem" onclick="toggleItem('${id}')" title="${it.en}">${it.e}</button>`;}).join('')}${petsHtml}</div>`;
+  const shopItem=(it,buyFn)=>{ const have=o[it.id]; return `<button class="shopitem ${have?'have':''}" onclick="${have?`toggleItem('${it.id}')`:`${buyFn}('${it.id}')`}"><span class="se">${it.e}</span><span class="sen">${it.en}</span><span class="sja">${it.ja}</span><span class="sp">${have?(o[it.id].placed?'おへやに いる・ある':'しまってある'):it.p+' 🪙'}</span></button>`; };
+  document.getElementById('shop').innerHTML=ITEMS.map(it=>shopItem(it,'buyItem')).join('')+`<div class="label" style="grid-column:1/-1; margin-top:8px;">🐾 ペット（おへやを あるきまわるよ）</div>`+PETS.map(p=>shopItem(p,'buyPet')).join('');
+  setTimeout(startPets,50);
 }
 function buyItem(id){ const it=ITEMS.find(x=>x.id===id); speak(it.en,0.9); if(!spend(it.p)){ document.getElementById('shop').querySelector(`button[onclick="buyItem('${id}')"]`).classList.add('shake'); setTimeout(()=>renderRoom(),500); return; } const o=owned(); o[id]={placed:true}; localStorage.setItem('pr_items',JSON.stringify(o)); confetti(16); chime(4); renderRoom(); }
-function toggleItem(id){ const o=owned(); if(!o[id]) return; o[id].placed=!o[id].placed; localStorage.setItem('pr_items',JSON.stringify(o)); const it=ITEMS.find(x=>x.id===id); speak(it.en,0.9); renderRoom(); }
+function toggleItem(id){ const o=owned(); if(!o[id]) return; o[id].placed=!o[id].placed; localStorage.setItem('pr_items',JSON.stringify(o)); const it=ITEMS.find(x=>x.id===id)||PETS.find(x=>x.id===id); if(it) speak(it.en,0.9); renderRoom(); }
 
 /* --- 共通のお知らせ箱 --- */
 function alertBox(title,msg,onClose){ const box=document.getElementById('unlockBox'); box.innerHTML=`<div class="box"><h2>${title}</h2><p style="font-size:1.3rem;">${msg}</p><div class="row"><button class="btn g" onclick="closeUnlock();(${onClose?'true':'false'})&&window.__ac&&window.__ac()">OK</button></div></div>`; window.__ac=onClose||null; box.classList.add('on'); }
