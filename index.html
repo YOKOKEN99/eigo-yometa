@@ -89,9 +89,11 @@
   .modal.on{display:flex;}
   .modal .box{background:#fff; border-radius:24px; padding:24px; width:min(90vw,380px); text-align:center;}
   .modal input{font-size:2rem; width:140px; text-align:center; border:3px solid #ddd; border-radius:12px; padding:6px; font-family:inherit;}
-  .cheer{position:fixed; left:50%; top:60%; transform:translate(-50%,-50%); width:min(62vw,360px); max-height:48vh; object-fit:contain; z-index:58; pointer-events:none;
-    border-radius:28px; background:#fff; box-shadow:0 10px 40px rgba(0,0,0,.25); animation:cheerIn 1.9s ease-out forwards;}
-  @keyframes cheerIn{0%{transform:translate(-50%,-50%) scale(.2) rotate(-15deg); opacity:0}20%{transform:translate(-50%,-50%) scale(1.1) rotate(3deg); opacity:1}30%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0; transform:translate(-50%,-50%) scale(1.05)}}
+  .cheer-wrap{position:fixed; inset:0; z-index:58; display:flex; flex-direction:column; align-items:center; justify-content:center; padding-top:12vh; cursor:pointer; background:rgba(255,255,255,.18);}
+  .cheer{width:min(70vw,420px); max-height:55vh; object-fit:contain; border-radius:28px; background:#fff; box-shadow:0 10px 40px rgba(0,0,0,.25); animation:cheerIn .7s ease-out both;}
+  @keyframes cheerIn{0%{transform:scale(.2) rotate(-15deg); opacity:0}60%{transform:scale(1.1) rotate(3deg); opacity:1}100%{transform:scale(1) rotate(0)}}
+  .cheer-hint{margin-top:14px; font-size:1.4rem; font-weight:800; color:#fff; text-shadow:0 3px 0 #5a3a3a, 0 0 12px rgba(0,0,0,.25); animation:blink 1.2s infinite;}
+  @keyframes blink{50%{opacity:.35}}
   label{display:block; margin:10px 0 4px; font-weight:700;}
   select,input[type=range]{font-size:1.1rem; width:100%;}
   .list{font-size:1.1rem; line-height:1.8;}
@@ -453,10 +455,10 @@ function check(){
     const firstTry=game.tries===0; game.first[game.i]=firstTry;
     game.streak=firstTry?game.streak+1:0;
     fb.textContent='⭐ よめた！ '+cur.w; logWord(cur.w); speak(cur.w); render();
-    celebrate(game.streak);
     document.getElementById('slots').classList.add('pop');
-    const wait=game.streak>=5?2200:game.streak>=3?1800:1400;
-    setTimeout(()=>{document.getElementById('slots').classList.remove('pop'); game.i++; if(game.i>=game.words.length) finish(); else nextWord();},wait);
+    const proceed=()=>{ if(!game||game.words[game.i]!==cur) return; document.getElementById('slots').classList.remove('pop'); game.i++; if(game.i>=game.words.length) finish(); else nextWord(); };
+    const shown=celebrate(game.streak,proceed);
+    if(!shown){ const wait=game.streak>=5?2200:game.streak>=3?1800:1400; setTimeout(proceed,wait); }
   }else{
     miss('もういちど きいてみよう');
   }
@@ -481,10 +483,20 @@ function finish(){
 const CHEER={1:'img/good.png',2:'img/streak2.png',3:'img/streak3.png',5:'img/streak5.png',7:'img/streak7.png',10:'img/perfect.png'};
 const cheerOK={};
 Object.entries(CHEER).forEach(([k,src])=>{ const im=new Image(); im.onload=()=>{cheerOK[k]=true;}; im.src=src; });
-function cheerImg(n){
+/* 絵はタッチ／クリックされるまで出続ける（2026-10-18 横田さん）。消えたら onDone を呼ぶ */
+let cheerDone=null;
+function cheerImg(n,onDone){
   const tier=n>=10?10:n>=7?7:n>=5?5:n>=3?3:n>=2?2:1;
   if(!cheerOK[tier]) return false;
-  const im=document.createElement('img'); im.className='cheer'; im.src=CHEER[tier]; document.body.appendChild(im); setTimeout(()=>im.remove(),2000); return true;
+  document.querySelectorAll('.cheer-wrap').forEach(w=>w.remove());
+  const wrap=document.createElement('div'); wrap.className='cheer-wrap';
+  const im=document.createElement('img'); im.className='cheer'; im.src=CHEER[tier];
+  const hint=document.createElement('div'); hint.className='cheer-hint'; hint.textContent='👆 さわると つぎへ';
+  wrap.appendChild(im); wrap.appendChild(hint); document.body.appendChild(wrap);
+  cheerDone=onDone||null;
+  const shownAt=Date.now();
+  wrap.addEventListener('click',()=>{ if(Date.now()-shownAt<400) return; wrap.remove(); const f=cheerDone; cheerDone=null; if(f) f(); });
+  return true;
 }
 /* ===== 演出：連続するほど派手に ===== */
 function confetti(n,set){ const e=set||['🎉','⭐','🌟','✨','🎊']; for(let i=0;i<n;i++){const d=document.createElement('div'); d.className='confetti'; d.textContent=e[i%e.length]; d.style.left=Math.random()*100+'vw'; d.style.fontSize=(1.6+Math.random()*1.4)+'rem'; d.style.animationDelay=(Math.random()*.6)+'s'; document.body.appendChild(d); setTimeout(()=>d.remove(),2400);} }
@@ -492,15 +504,16 @@ function banner(text,big){ const b=document.createElement('div'); b.className='b
 function flash(){ const f=document.createElement('div'); f.className='flash'; document.body.appendChild(f); setTimeout(()=>f.remove(),600); }
 function firework(x,y){ const cols=['#ff595e','#ffca3a','#8ac926','#1982c4','#6a4c93','#ff8c42']; for(let i=0;i<22;i++){const p=document.createElement('div'); p.className='burst'; const a=Math.PI*2*i/22, r=90+Math.random()*120; p.style.left=x+'px'; p.style.top=y+'px'; p.style.background=cols[i%cols.length]; p.style.setProperty('--dx',Math.cos(a)*r+'px'); p.style.setProperty('--dy',Math.sin(a)*r+'px'); document.body.appendChild(p); setTimeout(()=>p.remove(),1200);} }
 function fireworks(k){ for(let i=0;i<k;i++){ setTimeout(()=>firework(60+Math.random()*(innerWidth-120), 80+Math.random()*(innerHeight*0.5)), i*180); } }
-function celebrate(n){
+function celebrate(n,onDone){ /* 戻り値＝絵を出したか（出したときは触られるまで次へ進まない） */
   const b=document.body;
-  cheerImg(n);
-  if(n<=1){ confetti(14); return; }
-  if(n===2){ confetti(26); banner('すごい！ 2れんぞく'); chime(2); return; }
-  if(n<5){ confetti(40); flash(); banner(`すごい！ ${n}れんぞく！`); chime(n); b.classList.add('rainbow'); setTimeout(()=>b.classList.remove('rainbow'),1700); speakMore('Great!'); return; }
-  if(n<7){ confetti(60); flash(); fireworks(3); banner(`🔥 ${n}れんぞく！！`,true); chime(n); b.classList.add('shake-screen','rainbow'); setTimeout(()=>b.classList.remove('shake-screen','rainbow'),1700); speakMore('Wow! Amazing!'); return; }
-  if(n<10){ confetti(90,['🌟','💛','🏆','✨','🎉']); flash(); fireworks(6); banner(`🔥🔥 ${n}れんぞく！！！`,true); chime(8); b.classList.add('shake-screen','rainbow'); setTimeout(()=>b.classList.remove('shake-screen','rainbow'),1700); speakMore('Super star!'); return; }
+  const shown=cheerImg(n,onDone);
+  if(n<=1){ confetti(14); return shown; }
+  if(n===2){ confetti(26); banner('すごい！ 2れんぞく'); chime(2); return shown; }
+  if(n<5){ confetti(40); flash(); banner(`すごい！ ${n}れんぞく！`); chime(n); b.classList.add('rainbow'); setTimeout(()=>b.classList.remove('rainbow'),1700); speakMore('Great!'); return shown; }
+  if(n<7){ confetti(60); flash(); fireworks(3); banner(`🔥 ${n}れんぞく！！`,true); chime(n); b.classList.add('shake-screen','rainbow'); setTimeout(()=>b.classList.remove('shake-screen','rainbow'),1700); speakMore('Wow! Amazing!'); return shown; }
+  if(n<10){ confetti(90,['🌟','💛','🏆','✨','🎉']); flash(); fireworks(6); banner(`🔥🔥 ${n}れんぞく！！！`,true); chime(8); b.classList.add('shake-screen','rainbow'); setTimeout(()=>b.classList.remove('shake-screen','rainbow'),1700); speakMore('Super star!'); return shown; }
   confetti(120,['🏆','👑','🌟','💎','🎉']); flash(); fireworks(10); banner('👑 パーフェクト！！！',true); chime(8); setTimeout(()=>chime(8),500); b.classList.add('shake-screen','rainbow'); setTimeout(()=>b.classList.remove('shake-screen','rainbow'),1700);
+  return shown;
 }
 /* ===== タイマー（オンオフ切替） ===== */
 let tHandle=null, tEnd=0;
