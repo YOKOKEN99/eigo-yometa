@@ -415,6 +415,19 @@ yes:'はい',yet:'まだ',yum:'おいしい',yap:'キャンキャン',yak:'ヤ�
 chip:'ポテト',chop:'きざむ',chin:'あご',chat:'おしゃべり',much:'たくさん',rich:'おかねもち',such:'そんな',shop:'おみせ',ship:'ふね',shell:'かいがら',fish:'さかな',dish:'おさら',wish:'ねがう',bash:'ドンと たたく',rush:'いそぐ',thin:'ほそい',thick:'あつい',this:'これ',that:'あれ',then:'それから',them:'かれらを',moth:'が（むし）',bath:'おふろ',path:'こみち',with:'いっしょに',ring:'ゆびわ',sing:'うたう',song:'うた',long:'ながい',king:'おうさま',wing:'つばさ',bang:'バン！',hang:'かける',
 rain:'あめ',tail:'しっぽ',wait:'まつ',pain:'いたみ',sail:'ほ・ふねで いく',nail:'つめ・くぎ',paint:'えのぐ',see:'みる',feet:'あし（りょうあし）',tree:'き',bee:'はち',seed:'たね',deep:'ふかい',keep:'とっておく',sleep:'ねむる',green:'みどり',sheep:'ひつじ',high:'たかい',night:'よる',light:'ひかり',boat:'ボート',goat:'やぎ',road:'みち',coat:'コート',moon:'つき',food:'たべもの',zoo:'どうぶつえん',boot:'ながぐつ',book:'ほん',look:'みる',cook:'りょうりする',car:'くるま',farm:'のうじょう',park:'こうえん',star:'ほし',dark:'くらい',hard:'かたい',arm:'うで',fork:'フォーク',corn:'とうもろこし',horn:'つの',for:'〜のために',sort:'しゅるい',burn:'もえる',turn:'まわる',surf:'サーフィン',fur:'けがわ',hurt:'いたい',cow:'うし',down:'した',town:'まち',owl:'ふくろう',now:'いま',how:'どうやって',coin:'コイン',boil:'わかす',join:'くわわる',oil:'あぶら',ear:'みみ',hear:'きく',near:'ちかい',hair:'かみの け',fair:'こうへい',pair:'ペア',chair:'いす',pure:'きれいな',sure:'もちろん',her:'かのじょの',term:'がっき'};
 
+/* ===== 追加の語（2026-10-18 横田さん「問題数が少なすぎない？いつも同じ単語」→ 約250語を追加） ===== */
+const EXTRA={
+ /* セット2まで */ ant:'あり',tan:'ひやけ',sip:'ちょっと のむ',pip:'たね',dim:'うすぐらい',mid:'まんなか',pant:'はあはあ',mint:'ミント',damp:'しめった',mist:'きり',spin:'くるくる まわる',snap:'パチン',
+ /* セット3まで */ spot:'てん・ばしょ',stop:'とまる',skip:'スキップ',tank:'タンク',pink:'ピンク',sink:'ながしだい',ink:'インク',mask:'マスク',camp:'キャンプ',pond:'いけ',cost:'ねだん',pod:'さや',cog:'はぐるま',picnic:'ピクニック',napkin:'ナプキン',
+ /* セット4まで */ men:'おとこの ひとたち',pet:'ペット',get:'もらう',set:'おく',let:'させる',met:'あった',peg:'せんたくばさみ',den:'すあな',end:'おわり',tent:'テント',nest:'す',rest:'やすむ',test:'テスト',desk:'つくえ',step:'だん',send:'おくる',rust:'さび',dust:'ほこり',must:'ねばならない',pick:'えらぶ',sick:'びょうき',tick:'カチカチ',deck:'デッキ',peck:'つつく',rod:'つりざお',rip:'やぶる',rub:'こする',ram:'おひつじ',rocket:'ロケット',pocket:'ポケット',ticket:'きっぷ',trick:'てじな',truck:'トラック',drum:'ドラム',sunset:'ゆうやけ',upset:'おこる',tennis:'テニス',magnet:'じしゃく',insect:'むし',kitten:'こねこ',puppet:'あやつりにんぎょう',cactus:'サボテン',pumpkin:'かぼちゃ',
+ /* セット5まで */ help:'たすける',hand:'て',hut:'こや',hum:'ハミング',hit:'うつ',him:'かれを',his:'かれの',had:'もっていた',has:'もっている',bit:'すこし',bun:'まるパン',bump:'ぶつかる',belt:'ベルト',best:'いちばん',bend:'まげる',flag:'はた',flap:'ぱたぱた',flip:'ひっくりかえす',flat:'たいら',frog:'かえる',from:'から',fast:'はやい',fist:'こぶし',fat:'ふとった',fluff:'ふわふわ',cliff:'がけ',sniff:'くんくん',stuff:'もの',lamp:'ランプ',land:'りく',left:'ひだり',lemon:'レモン',lift:'もちあげる',list:'リスト',lost:'まいご',lump:'こぶ',pill:'くすり',moss:'こけ',pass:'とおる',grass:'くさ',glass:'ガラス',class:'クラス',dress:'ドレス',press:'おす',cross:'わたる',toss:'なげる',miss:'のがす',rabbit:'うさぎ',basket:'かご',bucket:'バケツ',helmet:'ヘルメット',habit:'くせ',goblin:'ゴブリン',robin:'こまどり',melon:'メロン',salad:'サラダ',camel:'らくだ',cabin:'こや',blanket:'もうふ',plastic:'プラスチック',muffin:'マフィン',puffin:'パフィン',hiccup:'しゃっくり',crab:'かに',
+ /* セット6まで */ wind:'かぜ',west:'にし',well:'じょうず',will:'〜する',swim:'およぐ',twin:'ふたご',twig:'こえだ',visit:'たずねる',vest:'ベスト',velvet:'ベルベット',seven:'なな（7）',eleven:'じゅういち（11）',jump:'とぶ',just:'ちょうど',jacket:'うわぎ',exit:'でぐち',next:'つぎ',taxi:'タクシー',twist:'ひねる',wagon:'ワゴン',
+ /* セット7まで */ yell:'さけぶ',yank:'ぐいっと ひく',zigzag:'ジグザグ',fuzz:'けば',quack:'ガーガー',quill:'はねペン',quest:'ぼうけん',squid:'いか',liquid:'えきたい',yummy:'おいしい',puppy:'こいぬ',happy:'しあわせ',sunny:'はれ',funny:'おもしろい',jelly:'ゼリー',bunny:'うさちゃん',kitty:'ねこちゃん',daddy:'パパ',mummy:'ママ',candy:'あめ',windy:'かぜが つよい',silly:'おばか',fluffy:'ふわふわ',messy:'ちらかった',lucky:'ラッキー',sticky:'べたべた',twenty:'にじゅう（20）',
+ /* セット8まで */ chick:'ひよこ',check:'しらべる',chest:'むね・はこ',chimp:'チンパンジー',lunch:'ひるごはん',bench:'ベンチ',punch:'パンチ',pinch:'つねる',shut:'しめる',shed:'ものおき',shock:'びっくり',shrimp:'えび',shelf:'たな',splash:'ばしゃん',brush:'ブラシ',crash:'ガシャン',flash:'ぴかっ',fresh:'しんせん',finish:'おわる',rubbish:'ごみ',thing:'もの',think:'かんがえる',thank:'ありがとう',cloth:'ぬの',tenth:'じゅうばんめ',sixth:'ろくばんめ',than:'〜より',strong:'つよい',spring:'はる',string:'ひも',bring:'もってくる',swing:'ブランコ',sting:'さす',rang:'なった',hung:'かけた',lung:'はい',gong:'どら',ding:'チーン',chicken:'にわとり',kitchen:'だいどころ',sandwich:'サンドイッチ',fishing:'つり',jumping:'ジャンプ',shopping:'かいもの',chopsticks:'おはし',
+ /* セット9まで */ train:'でんしゃ',snail:'かたつむり',chain:'くさり',brain:'のう',main:'おもな',mail:'てがみ',gain:'える',bait:'えさ',raincoat:'レインコート',sweet:'あまい',sweep:'はく',seen:'みた',queen:'じょおう',three:'さん（3）',free:'じゆう',feel:'かんじる',heel:'かかと',meet:'あう',week:'しゅう',teeth:'は（たくさん）',cheek:'ほっぺ',sheet:'シーツ',screen:'がめん',bright:'あかるい',fight:'たたかう',right:'みぎ',tight:'きつい',might:'かもしれない',flight:'ひこう',midnight:'まよなか',toast:'トースト',soap:'せっけん',loaf:'パン１きん',float:'うく',roast:'やく',oak:'かしの き',spoon:'スプーン',balloon:'ふうせん',cartoon:'アニメ',room:'へや',roof:'やね',tooth:'は',hoop:'わ',broom:'ほうき',igloo:'イグルー',too:'〜も',cool:'すずしい',pool:'プール',good:'よい',wood:'き（ざいりょう）',foot:'あし',hook:'フック',took:'とった',hood:'フード',wool:'ウール',card:'カード',cart:'カート',dart:'ダーツ',shark:'さめ',smart:'かしこい',start:'はじめる',garden:'にわ',market:'いちば',carpet:'じゅうたん',jar:'びん',bark:'ワン！',scarf:'マフラー',art:'びじゅつ',storm:'あらし',sport:'スポーツ',short:'みじかい',north:'きた',torch:'かいちゅうでんとう',popcorn:'ポップコーン',morning:'あさ',born:'うまれた',fort:'とりで',curl:'まく',church:'きょうかい',turnip:'かぶ',brown:'ちゃいろ',crown:'おうかん',clown:'ピエロ',flower:'はな',tower:'とう',shower:'シャワー',power:'ちから',towel:'タオル',soil:'つち',point:'ゆびさす',foil:'アルミホイル',toilet:'トイレ',dear:'だいすきな',fear:'こわい',year:'とし',beard:'ひげ',clear:'すんだ',stairs:'かいだん',air:'くうき',cure:'なおす',herb:'ハーブ',fern:'シダ',letter:'てがみ',summer:'なつ',winter:'ふゆ',dinner:'ゆうごはん',hammer:'かなづち',ladder:'はしご',butter:'バター',better:'もっと よい',sister:'おねえさん・いもうと',under:'した',river:'かわ',never:'けっして',silver:'ぎん',farmer:'のうか',corner:'かど',thunder:'かみなり',hamster:'ハムスター',monster:'かいぶつ',number:'かず',jumper:'セーター',rubber:'ゴム',pepper:'こしょう',zipper:'ファスナー'
+};
+Object.keys(EXTRA).forEach(w=>{ if(!JA[w]) JA[w]=EXTRA[w]; if(!WORDS.includes(w)) WORDS.push(w); });
+
 function split(word){
   const out=[]; let i=0;
   while(i<word.length){
@@ -498,13 +511,20 @@ function chime(n){ /* 連続の数だけ音が上がっていく */
 
 /* ===== きいて ならべる ===== */
 let game=null;
+/* 直近に出した語（最大80語）は避ける。避けると足りないときだけ古いものから戻す（2026-10-18） */
+const recent=()=>JSON.parse(localStorage.getItem('pr_recent')||'[]');
 function pickWords(){
-  const L=S.level; const pool=BANK.filter(b=>b.level<=L);
+  const L=S.level; const all=BANK.filter(b=>b.level<=L);
+  let rec=recent(); let pool=all.filter(b=>!rec.includes(b.w));
+  while(pool.length<10&&rec.length){ rec=rec.slice(Math.ceil(rec.length/2)); pool=all.filter(b=>!rec.includes(b.w)); }
+  if(pool.length<10) pool=all;
   const top=pool.filter(b=>b.level===L).sort(()=>Math.random()-.5);
   const rest=pool.filter(b=>b.level<L).sort(()=>Math.random()-.5);
-  const chosen=[...top.slice(0,5),...rest].slice(0,10);
-  if(chosen.length<10) chosen.push(...top.slice(5,10-chosen.length));
-  return chosen.sort(()=>Math.random()-.5).slice(0,10);
+  let chosen=[...top.slice(0,4),...rest.slice(0,6)];
+  if(chosen.length<10) chosen=[...chosen,...top.slice(4),...rest.slice(6)].slice(0,10);
+  chosen=chosen.sort(()=>Math.random()-.5).slice(0,10);
+  const newRec=[...recent(),...chosen.map(b=>b.w)].slice(-80); localStorage.setItem('pr_recent',JSON.stringify(newRec));
+  return chosen;
 }
 function startBuild(){
   game={words:pickWords(),i:0,tries:0,slots:[],tiles:[],streak:0,first:[],earned:0};
