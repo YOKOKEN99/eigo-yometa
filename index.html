@@ -89,7 +89,21 @@
   .earned{font-size:1.6rem; font-weight:800; color:#b8860b; text-align:center; margin:6px 0;}
   /* ミニゲーム */
   .machine{font-size:7rem; line-height:1; margin:6px 0;}
-  .gresult{min-height:60px; margin:8px 0;} .gimg{width:min(60vw,320px); border-radius:24px; border:4px solid var(--line); box-shadow:0 8px 0 #ffd6e2; background:#fff; animation:pop .6s;}
+  .gresult{min-height:60px; margin:8px 0;}
+  /* ガチャの演出：カプセルが落ちて跳ねて、パカッと開く */
+  .gstage{position:relative; height:230px; margin:4px auto 8px; width:min(90vw,420px);}
+  .capsule{position:absolute; left:50%; top:0; width:120px; height:120px; margin-left:-60px; animation:capDrop 1.1s cubic-bezier(.3,1.6,.5,1) forwards;}
+  .cap-top,.cap-bot{position:absolute; left:0; width:120px; height:60px; border:4px solid var(--line); box-sizing:border-box;}
+  .cap-top{top:0; border-radius:60px 60px 0 0; background:var(--pink);} .cap-bot{top:60px; border-radius:0 0 60px 60px; background:#fff; border-top:none;}
+  .capsule.rare .cap-top{background:#ffd34d;} .capsule.rare::after{content:''; position:absolute; inset:-14px; border-radius:50%; box-shadow:0 0 30px 10px rgba(255,215,0,.6); animation:blink .5s infinite;}
+  .capsule.wobble{animation:capWobble .7s ease-in-out 2;}
+  .capsule.open .cap-top{animation:capOpenTop .5s ease-out forwards;} .capsule.open .cap-bot{animation:capOpenBot .5s ease-out forwards;}
+  @keyframes capDrop{0%{transform:translateY(-240px) rotate(-20deg); opacity:0}30%{opacity:1}70%{transform:translateY(100px) rotate(10deg)}85%{transform:translateY(80px) rotate(-5deg)}100%{transform:translateY(100px) rotate(0)}}
+  @keyframes capWobble{0%,100%{transform:translateY(100px) rotate(0)}25%{transform:translateY(100px) rotate(-14deg)}75%{transform:translateY(100px) rotate(14deg)}}
+  @keyframes capOpenTop{to{transform:translate(-70px,-90px) rotate(-50deg); opacity:0}}
+  @keyframes capOpenBot{to{transform:translate(70px,40px) rotate(40deg); opacity:0}}
+  .gprize{animation:pop .6s;}
+  .machine.shake{animation:shake .5s infinite;} .gimg{width:min(60vw,320px); border-radius:24px; border:4px solid var(--line); box-shadow:0 8px 0 #ffd6e2; background:#fff; animation:pop .6s;}
   .gimg.rare{border-color:#f0b400; box-shadow:0 8px 0 #f0b400, 0 0 30px rgba(255,220,0,.7);}
   .pond{position:relative; height:min(58vh,520px); background:linear-gradient(#d0f4ff,#9fe3ff); border:3px solid var(--line); border-radius:28px; overflow:hidden; margin:8px 0;}
   .fishbtn{position:absolute; border:none; background:#fff; border-radius:999px; padding:6px 12px 6px 6px; display:flex; align-items:center; gap:6px; box-shadow:0 4px 0 rgba(0,0,0,.15); cursor:pointer; font-family:inherit; animation:swim 8s ease-in-out infinite alternate;}
@@ -308,7 +322,7 @@
     <h2 style="margin:0;">🃏 カードめくり</h2>
     <span class="coins">🪙 0</span>
   </div>
-  <p class="hint">えいごの カードと にほんごの カードを あわせよう（えいごは さわると よんでくれる）</p>
+  <p class="hint">えいごの カードと にほんごの カードを あわせよう（えいごは さわると よんでくれる）。1くみ 25🪙・ぜんぶ そろえると +150🪙・すくない かいすうなら さらに +100🪙</p>
   <div class="cards" id="cards"></div>
   <div class="feedback" id="memFb"></div>
   <div class="row"><button class="btn small y" onclick="startMemory()">🔁 もういちど（30 🪙）</button></div>
@@ -764,6 +778,10 @@ function askUnlock(id){
 function closeUnlock(){ document.getElementById('unlockBox').classList.remove('on'); }
 function doUnlock(id){ const m=MINI.find(x=>x.id===id); if(S.coins<m.price) return; S.coins=S.coins-m.price; const u=unlocked(); u.push(id); localStorage.setItem('pr_unlocked',JSON.stringify(u)); closeUnlock(); renderCoins(); renderMini(); confetti(30); chime(5); speakMore('Unlocked!'); setTimeout(()=>m.open(),600); }
 function spend(n){ if(S.coins<n){ return false; } S.coins=S.coins-n; renderCoins(); return true; }
+/* ミニゲームの難しさとコインはレベル設定で変わる（2026-10-18 横田さん）: セット1〜3＝やさしい／4〜6＝ふつう（コイン1.5倍）／7〜9＝むずかしい（コイン2倍） */
+function diffTier(){ return S.level<=3?0:S.level<=6?1:2; }
+function miniMult(){ return [1,1.5,2][diffTier()]; }
+const DIFF_NAME=['やさしい','ふつう','むずかしい'];
 function allImgs(){ if(!POOL) return []; return Object.values(POOL.bands).flatMap(b=>Object.entries(b.tiers).flatMap(([t,l])=>l.map(src=>({src,tier:+t})))); }
 
 /* --- ガチャ --- */
@@ -771,18 +789,29 @@ const gachaColl=()=>JSON.parse(localStorage.getItem('pr_gacha')||'[]');
 function spinGacha(){
   const res=document.getElementById('gresult'); const btn=document.getElementById('spinBtn');
   if(!spend(100)){ res.innerHTML='<p style="font-size:1.3rem;">コインが たりないよ（100 🪙 いるよ）</p>'; return; }
-  btn.disabled=true; res.innerHTML=''; const m=document.getElementById('machine'); m.classList.add('shake'); chime(3);
+  btn.disabled=true; res.innerHTML=''; const m=document.getElementById('machine'); m.classList.add('shake');
+  /* 先に結果を決めて、演出（ガラガラ→カプセル落下→ゆらゆら→パカッ）のあとで見せる（2026-10-18 横田さん「結果だけ表示されるから演出が欲しい」） */
+  const r=Math.random(); const imgs=allImgs(); const rare=imgs.filter(x=>x.tier===10); const normal=imgs.filter(x=>x.tier!==10);
+  const o=owned(); const unowned=unlocked().includes('room')?ITEMS.filter(it=>!o[it.id]):[];
+  let kind='miss', payload=null;
+  if(unowned.length&&r>=0.40&&r<0.60){ kind='item'; payload=unowned[Math.floor(Math.random()*unowned.length)]; }
+  else if(r<0.55&&normal.length){ kind='img'; payload=normal[Math.floor(Math.random()*normal.length)]; }
+  else if(r<0.78){ kind='coin'; payload=[50,80,100,150,200,300][Math.floor(Math.random()*6)]; }
+  else if(r<0.92&&rare.length){ kind='rare'; payload=rare[Math.floor(Math.random()*rare.length)]; }
+  const isRare=kind==='rare';
+  /* ガラガラ音：だんだん速く */
+  [0,300,550,750,900,1020,1120].forEach(t=>setTimeout(()=>chime(1),t));
+  setTimeout(()=>{ m.classList.remove('shake'); res.innerHTML=`<div class="gstage"><div class="capsule ${isRare?'rare':''}" id="capsule"><div class="cap-top"></div><div class="cap-bot"></div></div></div>`; chime(2); },1200);
+  setTimeout(()=>{ const c=document.getElementById('capsule'); if(c){ c.classList.add('wobble'); } chime(isRare?6:3); },2300);
+  setTimeout(()=>{ const c=document.getElementById('capsule'); if(c){ c.classList.remove('wobble'); c.classList.add('open'); } flash(); chime(isRare?8:5); },3700);
   setTimeout(()=>{
-    m.classList.remove('shake'); btn.disabled=false;
-    const r=Math.random(); const imgs=allImgs(); const rare=imgs.filter(x=>x.tier===10); const normal=imgs.filter(x=>x.tier!==10);
-    /* おへやを開放していると、まだ持っていないお部屋のパーツが出ることがある（2026-10-18 横田さん） */
-    const o=owned(); const unowned=unlocked().includes('room')?ITEMS.filter(it=>!o[it.id]):[];
-    if(unowned.length&&r>=0.40&&r<0.60){ const it=unowned[Math.floor(Math.random()*unowned.length)]; o[it.id]={placed:true}; localStorage.setItem('pr_items',JSON.stringify(o)); res.innerHTML=`<div class="label">🏠 おへやの パーツ！</div><div class="big-emoji pop">${it.e}</div><div class="label" style="font-family:'Comic Sans MS','Chalkboard SE','Segoe Print',sans-serif; font-size:1.8rem;">${it.en}</div><div class="hint">${it.ja}（おへやに おいたよ）</div>`; speak(it.en,0.9); confetti(24); chime(4); return; }
-    if(r<0.55&&normal.length){ const p=normal[Math.floor(Math.random()*normal.length)]; const c=gachaColl(); c.push(p.src); localStorage.setItem('pr_gacha',JSON.stringify(c)); res.innerHTML=`<div class="label">🎉 どうぶつの え！</div><img class="gimg" src="${p.src}">`; confetti(24); chime(4); }
-    else if(r<0.78){ const n=[50,80,100,150,200,300][Math.floor(Math.random()*6)]; S.coins=S.coins+n; renderCoins(); res.innerHTML=`<div class="label">💰 コイン +${n}！</div><div class="big-emoji pop">🪙</div>`; confetti(20); coinFloat(n); }
-    else if(r<0.92&&rare.length){ const p=rare[Math.floor(Math.random()*rare.length)]; const c=gachaColl(); c.push(p.src); localStorage.setItem('pr_gacha',JSON.stringify(c)); res.innerHTML=`<div class="label">👑 レア！！</div><img class="gimg rare" src="${p.src}">`; confetti(60,['👑','🌟','💎']); flash(); fireworks(4); chime(8); speakMore('Rare!'); }
-    else { S.coins=S.coins+20; renderCoins(); res.innerHTML=`<div class="label">ざんねん… 20 🪙 かえってきた</div><div class="big-emoji">🫧</div>`; }
-  },1300);
+    btn.disabled=false;
+    if(kind==='item'){ const it=payload; o[it.id]={placed:true}; localStorage.setItem('pr_items',JSON.stringify(o)); res.innerHTML=`<div class="gprize"><div class="label">🏠 おへやの パーツ！</div><div class="big-emoji pop">${it.e}</div><div class="label" style="font-family:'Comic Sans MS','Chalkboard SE','Segoe Print',sans-serif; font-size:1.8rem;">${it.en}</div><div class="hint">${it.ja}（おへやに おいたよ）</div></div>`; speak(it.en,0.9); confetti(24); chime(4); }
+    else if(kind==='img'){ const p=payload; const c=gachaColl(); c.push(p.src); localStorage.setItem('pr_gacha',JSON.stringify(c)); res.innerHTML=`<div class="gprize"><div class="label">🎉 どうぶつの え！</div><img class="gimg" src="${p.src}"></div>`; confetti(24); chime(4); }
+    else if(kind==='coin'){ const n=payload; S.coins=S.coins+n; renderCoins(); res.innerHTML=`<div class="gprize"><div class="label">💰 コイン +${n}！</div><div class="big-emoji pop">🪙</div></div>`; confetti(20); coinFloat(n); }
+    else if(kind==='rare'){ const p=payload; const c=gachaColl(); c.push(p.src); localStorage.setItem('pr_gacha',JSON.stringify(c)); res.innerHTML=`<div class="gprize"><div class="label">👑 レア！！</div><img class="gimg rare" src="${p.src}"></div>`; confetti(60,['👑','🌟','💎']); fireworks(4); chime(8); speakMore('Rare!'); }
+    else { S.coins=S.coins+20; renderCoins(); res.innerHTML=`<div class="gprize"><div class="label">ざんねん… 20 🪙 かえってきた</div><div class="big-emoji">🫧</div></div>`; }
+  },4200);
 }
 
 /* --- えいご つり --- */
@@ -790,7 +819,8 @@ let fishing=null;
 function fishWords(n){ const pool=BANK.filter(b=>b.level<=S.level).sort(()=>Math.random()-.5); return pool.slice(0,n); }
 function startFishing(){
   if(!spend(30)){ alertBox('🎣 えいご つり','1かい 30 🪙 いるよ。コインを ためてね'); return; }
-  fishing={score:0,time:45,words:fishWords(6),target:null,tick:null};
+  const tier=diffTier(); const count=[5,6,8][tier]; const time=[50,45,40][tier];
+  fishing={score:0,time,words:fishWords(count),target:null,tick:null};
   go('fish'); renderPond(); nextTarget();
   fishing.tick=setInterval(()=>{ fishing.time--; document.getElementById('fishTime').textContent='⏱ '+fishing.time; if(fishing.time<=0) endFishing(false); },1000);
 }
@@ -810,18 +840,21 @@ function catchFish(i){
 function endFishing(quit){
   if(!fishing) { go('home'); return; } clearInterval(fishing.tick); const sc=fishing.score; fishing=null;
   if(quit){ go('home'); return; }
-  const earn=sc*8; S.coins=S.coins+earn; renderCoins();
-  alertBox('🎣 おしまい！',`${sc}びき つれた！ コイン +${earn} 🪙`,()=>go('home')); if(sc>=6){ confetti(40); chime(6); }
+  const earn=Math.round(sc*8*miniMult()); S.coins=S.coins+earn; renderCoins();
+  alertBox('🎣 おしまい！',`${sc}びき つれた！ コイン +${earn} 🪙（${DIFF_NAME[diffTier()]}）`,()=>go('home')); if(sc>=6){ confetti(40); chime(6); }
 }
 
 /* --- カードめくり --- */
 let mem=null;
 function startMemory(){
   if(!spend(30)){ alertBox('🃏 カードめくり','1かい 30 🪙 いるよ。コインを ためてね'); return; }
-  const words=BANK.filter(b=>b.level<=S.level&&JA[b.w]).sort(()=>Math.random()-.5).slice(0,6);
+  /* 10組20枚・1組25🪙・全部で+150🪙・少ない回数でそろえたら+100🪙（2026-10-18 横田さん「単純なのでカード数を増やしコインを多く」） */
+  const pairs=Math.min([6,8,10][diffTier()],BANK.filter(b=>b.level<=S.level&&JA[b.w]).length);
+  const words=BANK.filter(b=>b.level<=S.level&&JA[b.w]).sort(()=>Math.random()-.5).slice(0,pairs);
   const cards=words.flatMap(w=>[{k:w.w,t:'en',txt:w.w},{k:w.w,t:'ja',txt:JA[w.w]}]).sort(()=>Math.random()-.5);
-  mem={cards,open:[],done:0,lock:false,tries:0};
+  mem={cards,open:[],done:0,lock:false,tries:0,pairs};
   go('memory'); document.getElementById('memFb').textContent='';
+  document.getElementById('cards').style.gridTemplateColumns=pairs>=8?'repeat(5,1fr)':'repeat(4,1fr)';
   document.getElementById('cards').innerHTML=cards.map((c,i)=>`<button class="mcard" id="mc${i}" onclick="flipCard(${i})"><span class="front">❓</span><span class="back ${c.t}">${c.txt}</span></button>`).join('');
 }
 function flipCard(i){
@@ -830,8 +863,8 @@ function flipCard(i){
   if(mem.open.length===2){
     mem.lock=true; mem.tries++; const [a,b]=mem.open.map(k=>mem.cards[k]);
     setTimeout(()=>{
-      if(a.k===b.k&&a.t!==b.t){ mem.open.forEach(k=>{document.getElementById('mc'+k).classList.add('ok');}); mem.done++; logWord(a.k); S.coins=S.coins+10; renderCoins(); coinFloat(10); chime(3);
-        if(mem.done===6){ S.coins=S.coins+30; renderCoins(); document.getElementById('memFb').textContent=`🎉 ぜんぶ そろった！ ボーナス +30 🪙`; confetti(40); chime(8); speakMore('Great job!'); } }
+      if(a.k===b.k&&a.t!==b.t){ mem.open.forEach(k=>{document.getElementById('mc'+k).classList.add('ok');}); mem.done++; logWord(a.k); const per=Math.round(25*miniMult()); S.coins=S.coins+per; renderCoins(); coinFloat(per); chime(3);
+        if(mem.done===mem.pairs){ let bonus=Math.round(150*miniMult()); let msg=`🎉 ぜんぶ そろった！ ボーナス +${bonus} 🪙`; if(mem.tries<=mem.pairs+4){ const ex=Math.round(100*miniMult()); bonus+=ex; msg+=`　すごい！ すくない かいすうで +${ex} 🪙`; } S.coins=S.coins+bonus; renderCoins(); document.getElementById('memFb').textContent=msg; confetti(60); fireworks(3); chime(8); speakMore('Great job!'); } }
       else { mem.open.forEach(k=>document.getElementById('mc'+k).classList.remove('up')); }
       mem.open=[]; mem.lock=false;
     },900);
@@ -907,7 +940,7 @@ document.getElementById('gateA').addEventListener('keydown',e=>{ if(e.key==='Ent
 function renderParent(){
   const L=S.level;
   document.getElementById('setGrid').innerHTML=SETS.map((s,i)=>`<button class="setbtn ${i<L?'on':''}" onclick="S.level=${i+1};renderParent();setStartImg();preloadBand(bandOf(S.level))"><b>セット${i+1}</b><span>${s.g.join(' ')}</span></button>`).join('');
-  const bn=bandName(L); document.getElementById('bandHint').textContent=bn?`ごほうびの絵: いまは「${bn}」（セットごとに動物が変わります: ひよこ→うさぎ→ハムスター→ペンギン→パンダ→コアラ→きりん→三毛猫→白い子猫）`:'';
+  const bn=bandName(L); document.getElementById('bandHint').textContent=(bn?`ごほうびの絵: いまは「${bn}」（セットごとに動物が変わります: ひよこ→うさぎ→ハムスター→ペンギン→パンダ→コアラ→きりん→三毛猫→白い子猫）。`:'')+`ミニゲームの難しさ: いまは「${DIFF_NAME[diffTier()]}」（セット1〜3やさしい／4〜6ふつう・コイン1.5倍／7〜9むずかしい・コイン2倍。魚の数・時間・カードの組数も変わります）`;
   fillVoiceSel();
   const r=document.getElementById('rate'); r.value=S.rate; document.getElementById('rateVal').textContent=S.rate.toFixed(2);
   r.oninput=()=>{S.rate=+r.value; document.getElementById('rateVal').textContent=S.rate.toFixed(2);};
