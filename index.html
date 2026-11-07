@@ -140,6 +140,16 @@
   .fe{font-size:2.4rem; line-height:1.1;} .fcount{font-weight:800; color:#b8860b;}
   .minifridge{display:inline-block; width:26px; height:40px; background:#f4fbff; border:3px solid var(--line); border-radius:6px; position:relative; vertical-align:middle;}
   .minifridge::before{content:''; position:absolute; left:0; right:0; top:12px; border-top:3px solid var(--line);}
+  /* そと（公園）と 持ってこい・人間キャラ */
+  .roomfloor.park{background:linear-gradient(#cdeeff 0 45%, #bfeaa8 45% 100%); cursor:crosshair;}
+  .roomfloor.park::before{content:'☁️        ☁️      🌳'; position:absolute; left:10px; top:8px; font-size:2rem; letter-spacing:6px; opacity:.9; pointer-events:none;}
+  .roomfloor.park::after{content:'🌷 🌼   🌷    🌼 🌷'; position:absolute; left:0; right:0; bottom:6px; text-align:center; font-size:1.4rem; letter-spacing:10px; pointer-events:none;}
+  .pet.human{border-color:#7c6cc4; background:#fff8fd;}
+  .throwbar{display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:6px 0;}
+  .tbtn{border:3px solid #e8d9dd; border-radius:16px; background:#fff; padding:4px 10px; cursor:pointer; font-family:inherit; color:var(--ink); display:flex; flex-direction:column; align-items:center; min-width:64px;}
+  .tbtn.on{border-color:var(--line); background:var(--cream);}
+  .tbtn .te{font-size:1.9rem; line-height:1.1;} .tbtn .tn{font-size:.95rem; font-weight:800; font-family:"Comic Sans MS","Chalkboard SE","Segoe Print",sans-serif;}
+  .thrown{position:absolute; font-size:2.2rem; z-index:6; pointer-events:none;}
   .minibed{display:inline-block; width:46px; height:22px; border-radius:23px/11px; background:var(--pink); border:3px solid var(--line); vertical-align:middle;}
   .roomitem{font-size:3rem; background:none; border:none; cursor:pointer; filter:drop-shadow(0 3px 0 rgba(0,0,0,.15));}
   .shop{display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:10px;}
@@ -356,8 +366,10 @@
     <h2 style="margin:0;">🏠 おへや</h2>
     <span class="coins">🪙 0</span>
   </div>
+  <div class="row" style="margin-bottom:4px;"><button class="btn small g" id="parkBtn" onclick="toggleOutside()">🌳 そとで あそぶ</button></div>
   <div class="card roombox" id="roombox"></div>
-  <p class="hint">おみせで かった ものを さわると おへやに おいたり しまったり できるよ</p>
+  <div id="throwBar" class="throwbar" style="display:none;"></div>
+  <p class="hint" id="roomHint">おみせで かった ものを さわると おへやに おいたり しまったり できるよ</p>
   <div class="card">
     <div class="label">🛍 おみせ</div>
     <div class="shop" id="shop"></div>
@@ -909,14 +921,30 @@ function startPets(){
   layoutObjs(floor);
   const els=[...floor.querySelectorAll('.pet')]; if(!els.length){ petState=[]; return; }
   const W=floor.clientWidth, H=floor.clientHeight;
-  petState=els.map(el=>{ const s={el,id:el.dataset.id,x:Math.random()*(W-90),y:H*0.45+Math.random()*(H*0.45-90),tx:0,ty:0,sp0:0.6+Math.random()*0.7,dir:1,t:Math.random()*100,rest:0,task:null,zz:null}; s.sp=s.sp0; pick(s,W,H); return s; });
+  const park=roomMode==='park';
+  petState=els.map(el=>{ const s={el,id:el.dataset.id,x:Math.random()*(W-90),y:H*0.45+Math.random()*(H*0.45-90),tx:0,ty:0,sp0:0.6+Math.random()*0.7,dir:1,t:Math.random()*100,rest:0,task:null,zz:null}; s.sp=s.sp0;
+    /* そとでは人間キャラは左に立って投げる係 */
+    if(park&&s.id==='me'){ s.fixed=true; s.x=12; s.y=H*0.55; s.tx=s.x; s.ty=s.y; return s; }
+    if(park){ s.x=110+Math.random()*(W-210); s.y=H*0.5+Math.random()*(H*0.4-90); }
+    pick(s,W,H); return s; });
   function pick(s,W,H){
     s.task=null; s.rest=0;
-    /* 動物のベッドがあると、ときどき昼寝しに行く */
-    if(isPlaced('petbed')&&OBJPOS.petbed&&Math.random()<0.2&&!petState.some(o=>o!==s&&o.task==='sleep')){ s.task='sleep'; s.tx=OBJPOS.petbed.x+15; s.ty=OBJPOS.petbed.y-50; return; }
+    /* 動物のベッドがあると、ときどき昼寝しに行く（おへやの中だけ・人間は行かない） */
+    if(!park&&s.id!=='me'&&isPlaced('petbed')&&OBJPOS.petbed&&Math.random()<0.2&&!petState.some(o=>o!==s&&o.task==='sleep')){ s.task='sleep'; s.tx=OBJPOS.petbed.x+15; s.ty=OBJPOS.petbed.y-50; return; }
+    if(park){ s.tx=110+Math.random()*(W-210); s.ty=H*0.5+Math.random()*(H*0.4-90); return; }
     s.tx=Math.random()*(W-90); s.ty=H*0.45+Math.random()*(H*0.45-90);
   }
   function arrive(s,W,H){
+    if(s.task==='fetch'){ s.carry=s.pickup; s.pickup=null; s.task='return'; const me=petState.find(o=>o.id==='me'); s.tx=me?me.x+70:60; s.ty=me?me.y+10:H*0.6; s.sp=5; chime(2); return; }
+    if(s.task==='return'){
+      const it=s.item; const c=s.carry; s.carry=null; s.item=null; s.task=null; s.sp=s.sp0; s.rest=50;
+      if(c) c.remove();
+      popAt(floor,s.x+20,s.y-10,'💖'); s.el.classList.remove('hop'); void s.el.offsetWidth; s.el.classList.add('hop');
+      setKidPose('happy'); setTimeout(()=>setKidPose('stand'),1500);
+      if(it&&it.food){ const fav=likesFood(it.food,s.id); setTimeout(()=>popAt(floor,s.x+30,s.y-30,fav?'💖💖💖':'❤️'),500); speakMore(fav?'Good job! Yummy!':'Good job!'); }
+      else { speakMore('Good job!'); }
+      chime(5); return;
+    }
     if(s.task==='sleep'){ s.rest=250+Math.random()*200; s.sleeping=true; s.zz=document.createElement('div'); s.zz.className='zzz'; s.zz.textContent='💤 z z z'; floor.appendChild(s.zz); return; }
     if(s.task==='eat'&&s.food){
       const f=s.food; s.food=null; s.rest=45; s.sp=s.sp0;
@@ -933,6 +961,7 @@ function startPets(){
     const W=floor.clientWidth, H=floor.clientHeight;
     petState.forEach(s=>{
       s.t+=0.15;
+      if(s.fixed){ s.el.style.transform=`translate(${s.x}px,${s.y}px)`; return; }
       if(s.rest>0){ s.rest--; if(s.rest<=0&&s.sleeping){ wakePet(s); pick(s,W,H); } }
       else{
         const dx=s.tx-s.x, dy=s.ty-s.y, d=Math.hypot(dx,dy);
@@ -942,13 +971,15 @@ function startPets(){
       const bob=s.rest>0?0:Math.abs(Math.sin(s.t))*6;
       s.el.style.transform=`translate(${s.x}px,${s.y-bob}px) scaleX(${s.dir})`;
       if(s.zz){ s.zz.style.left=(s.x+55)+'px'; s.zz.style.top=(s.y-20)+'px'; }
+      if(s.carry){ s.carry.style.left=(s.x+28)+'px'; s.carry.style.top=(s.y-28-bob)+'px'; }
+      if(s.id==='me') setKidPose(s.rest>0?'stand':'walk',true);
     });
   }
   petAnim=setInterval(frame,40);
 }
 function wakePet(s){ s.sleeping=false; if(s.zz){ s.zz.remove(); s.zz=null; } s.task=null; }
 function stopPets(){ if(petAnim){ clearInterval(petAnim); petAnim=null; } }
-function pokePet(id){ const pet=PETS.find(p=>p.id===id); const s=petState.find(x=>x.el.dataset.id===id); if(s){ if(s.sleeping){ wakePet(s); } s.rest=30; s.el.classList.remove('hop'); void s.el.offsetWidth; s.el.classList.add('hop'); } if(pet){ speak(pet.en,0.9); } chime(2); }
+function pokePet(id){ if(id==='me'){ speak('Hello!',0.9); setKidPose('happy'); setTimeout(()=>setKidPose('stand'),1200); } const pet=PETS.find(p=>p.id===id); const s=petState.find(x=>x.el.dataset.id===id); if(s){ if(s.sleeping){ wakePet(s); } s.rest=30; s.el.classList.remove('hop'); void s.el.offsetWidth; s.el.classList.add('hop'); } if(pet){ speak(pet.en,0.9); } chime(2); }
 
 /* --- 冷蔵庫とえさ（えさはコインで買って冷蔵庫に入る→出して動物に食べさせる。器があれば器に入る） --- */
 const FOODS=[
@@ -987,7 +1018,7 @@ function feed(id){
   const fd=FOODS.find(x=>x.id===id); const f=foods(); const m=document.getElementById('fridgeMsg');
   speak(fd.en,0.9);
   if(!f[id]){ if(m) m.textContent=`${fd.en} が ないよ。「かう」で ふやそう`; return; }
-  if(!petState.length){ if(m) m.textContent='ペットが いないよ。おみせで ペットを かってね'; return; }
+  if(!petState.some(s=>s.id!=='me')){ if(m) m.textContent='ペットが いないよ。おみせで ペットを かってね'; return; }
   f[id]--; localStorage.setItem('pr_food',JSON.stringify(f)); closeUnlock();
   const floor=document.querySelector('.roomfloor'); const W=floor.clientWidth, H=floor.clientHeight;
   /* 器があれば器に、無ければ床に置く */
@@ -996,7 +1027,7 @@ function feed(id){
   else { fx=W*0.2+Math.random()*W*0.6; fy=H*0.66+Math.random()*H*0.2; }
   const el=document.createElement('div'); el.className='food'; el.textContent=fd.e; el.style.left=fx+'px'; el.style.top=fy+'px'; floor.appendChild(el);
   /* その えさが好きな動物（いなければ一番近い動物）が走って食べに来る */
-  const free=petState.filter(s=>s.task!=='eat');
+  const free=petState.filter(s=>s.id!=='me'&&s.task!=='eat');
   const pool=free.length?free:petState;
   const liked=pool.filter(s=>likesFood(fd,s.id));
   const cand=liked.length?liked:pool;
@@ -1015,20 +1046,73 @@ function buyPet(id){ const pet=PETS.find(p=>p.id===id); speak(pet.en,0.9); if(!s
 /* --- おへや（おみせで買って かざる） --- */
 const ITEMS=[{id:'bed',e:'🛏️',en:'bed',ja:'ベッド',p:120},{id:'chair',e:'🪑',en:'chair',ja:'いす',p:80},{id:'lamp',e:'🪔',en:'lamp',ja:'ランプ',p:90},{id:'plant',e:'🪴',en:'plant',ja:'しょくぶつ',p:100},{id:'hat',e:'🎩',en:'hat',ja:'ぼうし',p:150},{id:'ribbon',e:'🎀',en:'ribbon',ja:'リボン',p:150},{id:'ball',e:'⚽',en:'ball',ja:'ボール',p:60},{id:'book',e:'📚',en:'book',ja:'ほん',p:70},{id:'cake',e:'🎂',en:'cake',ja:'ケーキ',p:200},{id:'star',e:'⭐',en:'star',ja:'ほし',p:250},{id:'clock',e:'⏰',en:'clock',ja:'とけい',p:110},{id:'fish',e:'🐟',en:'fish',ja:'さかな',p:130},{id:'car',e:'🚗',en:'car',ja:'くるま',p:300},{id:'rainbow',e:'🌈',en:'rainbow',ja:'にじ',p:500}];
 const owned=()=>JSON.parse(localStorage.getItem('pr_items')||'{}'); /* {id:{placed:true}} */
-function openRoom(){ go('room'); renderRoom(); }
+function openRoom(){ roomMode='room'; go('room'); renderRoom(); }
+/* --- 人間キャラ（img/kid/<ポーズ>.png があれば使う。無ければ 👧） と そと（公園）で「持ってこい」 --- */
+let roomMode='room'; let throwSel='ball';
+const KID_POSES=['stand','throw','happy','walk']; const kidOK={};
+KID_POSES.forEach(p=>{ const im=new Image(); im.onload=()=>{ kidOK[p]=true; }; im.src=`img/kid/${p}.png`; });
+function kidImg(pose){ return kidOK[pose]?`img/kid/${pose}.png`:(kidOK.stand?'img/kid/stand.png':''); }
+function kidHtml(){ const src=kidImg('stand'); return src?`<img class="pet human" data-id="me" src="${src}" onclick="pokePet('me');event.stopPropagation()" alt="me">`:`<div class="pet petemoji human" data-id="me" onclick="pokePet('me');event.stopPropagation()">👧</div>`; }
+function setKidPose(pose,auto){ const s=petState.find(x=>x.id==='me'); if(!s||s.el.tagName!=='IMG') return; if(!auto){ s.poseLock=(pose==='stand')?0:Date.now()+1100; } else if(s.poseLock&&Date.now()<s.poseLock) return; if(s.pose===pose) return; const src=kidImg(pose); if(src){ s.el.src=src; s.pose=pose; } }
+function toggleOutside(){ roomMode=roomMode==='room'?'park':'room'; renderRoom(); speak(roomMode==='park'?"Let's go outside!":'Home!',0.9); }
+function renderThrowBar(){
+  const bar=document.getElementById('throwBar'); if(roomMode!=='park'){ bar.style.display='none'; return; }
+  const f=foods(); const opts=[{id:'ball',e:'⚽',en:'ball',n:''}].concat(FOODS.filter(fd=>f[fd.id]>0).map(fd=>({id:fd.id,e:fd.e,en:fd.en,n:'×'+f[fd.id]})));
+  if(!opts.find(x=>x.id===throwSel)) throwSel='ball';
+  bar.innerHTML=opts.map(x=>`<button class="tbtn ${x.id===throwSel?'on':''}" onclick="throwSel='${x.id}';speak('${x.en}',0.9);renderThrowBar()"><span class="te">${x.e}</span><span class="tn">${x.en} ${x.n}</span></button>`).join('');
+  bar.style.display='flex';
+}
+function throwAt(ev){
+  if(roomMode!=='park') return;
+  const floor=ev.currentTarget; const rect=floor.getBoundingClientRect(); const W=floor.clientWidth, H=floor.clientHeight;
+  const x=Math.max(30,Math.min(W-40,ev.clientX-rect.left)), y=Math.max(H*0.5,Math.min(H-40,ev.clientY-rect.top));
+  const pets=petState.filter(s=>s.id!=='me'); const hint=document.getElementById('roomHint');
+  if(!pets.length){ hint.textContent='ペットが いないよ。おみせで ペットを かってね'; return; }
+  if(pets.some(s=>s.task==='fetch'||s.task==='return')||document.querySelector('.thrown.flying')) return;
+  let item;
+  if(throwSel==='ball'){ item={e:'⚽',en:'ball',food:null}; }
+  else { const fd=FOODS.find(z=>z.id===throwSel); const f=foods(); if(!fd||!f[fd.id]){ throwSel='ball'; renderThrowBar(); return; } f[fd.id]--; localStorage.setItem('pr_food',JSON.stringify(f)); item={e:fd.e,en:fd.en,food:fd}; renderThrowBar(); }
+  const me=petState.find(s=>s.id==='me'); const sx=me?me.x+50:40, sy=me?me.y+20:H*0.6;
+  setKidPose('throw'); setTimeout(()=>setKidPose('stand'),700);
+  speak(`Fetch the ${item.en}!`,0.9);
+  const el=document.createElement('div'); el.className='thrown flying'; el.textContent=item.e; floor.appendChild(el);
+  const N=26; let i=0;
+  const fly=setInterval(()=>{
+    i++; const t=i/N; el.style.left=(sx+(x-sx)*t)+'px'; el.style.top=(sy+(y-sy)*t-Math.sin(Math.PI*t)*130)+'px';
+    if(i>=N){ clearInterval(fly); el.classList.remove('flying'); dispatchFetch(el,item,x,y); }
+  },24);
+}
+function dispatchFetch(el,item,x,y){
+  const pets=petState.filter(s=>s.id!=='me'); if(!pets.length){ el.remove(); return; }
+  const liked=item.food?pets.filter(s=>likesFood(item.food,s.id)):[];
+  const cand=liked.length?liked:pets;
+  const s=cand[Math.floor(Math.random()*cand.length)];
+  if(s.sleeping) wakePet(s);
+  s.task='fetch'; s.pickup=el; s.item=item; s.rest=0; s.sp=6; s.tx=x-35; s.ty=y-55;
+}
 function renderRoom(){
-  const o=owned(); const animal=pickFrom(poolFor(S.level,1));
-  const petsHtml=PETS.filter(p=>o[p.id]&&o[p.id].placed).map(p=>{ const src=petImg(p); return src?`<img class="pet" data-id="${p.id}" src="${src}" onclick="pokePet('${p.id}')" alt="${p.en}">`:`<div class="pet petemoji" data-id="${p.id}" onclick="pokePet('${p.id}')">${p.e}</div>`; }).join('');
+  const o=owned(); const animal=pickFrom(poolFor(S.level,1)); const park=roomMode==='park';
+  document.getElementById('parkBtn').textContent=park?'🏠 おへやに もどる':'🌳 そとで あそぶ';
+  document.getElementById('roomHint').textContent=park?'したの ⚽ や えさを えらんで、くさの うえを さわると なげるよ。ペットが もってくるよ（Fetch!）':'おみせで かった ものを さわると おへやに おいたり しまったり できるよ';
+  const petsHtml=PETS.filter(p=>o[p.id]&&o[p.id].placed).map(p=>{ const src=petImg(p); return src?`<img class="pet" data-id="${p.id}" src="${src}" onclick="pokePet('${p.id}');event.stopPropagation()" alt="${p.en}">`:`<div class="pet petemoji" data-id="${p.id}" onclick="pokePet('${p.id}');event.stopPropagation()">${p.e}</div>`; }).join('');
+  if(park){
+    document.getElementById('roombox').innerHTML=`<div class="roomfloor park" onclick="throwAt(event)">${kidHtml()}${petsHtml}</div>`;
+    renderThrowBar(); setTimeout(startPets,50); renderShop(o); return;
+  }
+  renderThrowBar();
   const pl=id=>o[id]&&o[id].placed;
   const objsHtml=(pl('fridge')?`<div class="robj fridge" id="obj_fridge" onclick="openFridge()" title="fridge"></div>`:'')
     +(pl('bowl')?`<div class="robj bowl" id="obj_bowl" onclick="speak('bowl',0.9)" title="bowl">🥣</div>`:'')
     +(pl('petbed')?`<div class="robj petbed" id="obj_petbed" onclick="speak('pet bed',0.9)" title="pet bed"></div>`:'');
-  document.getElementById('roombox').innerHTML=`<div class="roomfloor">${animal?`<img class="roomanimal" src="${animal}">`:'<div class="big-emoji">🐱</div>'}${Object.entries(o).filter(([id,v])=>v.placed&&ITEMS.find(x=>x.id===id)).map(([id])=>{const it=ITEMS.find(x=>x.id===id); return `<button class="roomitem" onclick="toggleItem('${id}')" title="${it.en}">${it.e}</button>`;}).join('')}${objsHtml}${petsHtml}</div>`;
+  document.getElementById('roombox').innerHTML=`<div class="roomfloor">${animal?`<img class="roomanimal" src="${animal}">`:'<div class="big-emoji">🐱</div>'}${Object.entries(o).filter(([id,v])=>v.placed&&ITEMS.find(x=>x.id===id)).map(([id])=>{const it=ITEMS.find(x=>x.id===id); return `<button class="roomitem" onclick="toggleItem('${id}')" title="${it.en}">${it.e}</button>`;}).join('')}${objsHtml}${kidHtml()}${petsHtml}</div>`;
+  renderShop(o);
+  setTimeout(startPets,50);
+}
+function renderShop(o){
   const shopItem=(it,buyFn)=>{ const have=o[it.id]; return `<button class="shopitem ${have?'have':''}" onclick="${have?`toggleItem('${it.id}')`:`${buyFn}('${it.id}')`}"><span class="se">${it.e}</span><span class="sen">${it.en}</span><span class="sja">${it.ja}</span><span class="sp">${have?(o[it.id].placed?'おへやに いる・ある':'しまってある'):it.p+' 🪙'}</span></button>`; };
   document.getElementById('shop').innerHTML=ITEMS.map(it=>shopItem(it,'buyItem')).join('')
     +`<div class="label" style="grid-column:1/-1; margin-top:8px;">🍽 ごはん と ねどこ（れいぞうこを さわると えさを あげられるよ）</div>`+ROOMOBJ.map(it=>shopItem(it,'buyRoomObj')).join('')
     +`<div class="label" style="grid-column:1/-1; margin-top:8px;">🐾 ペット（おへやを あるきまわるよ）</div>`+PETS.map(p=>shopItem(p,'buyPet')).join('');
-  setTimeout(startPets,50);
 }
 function buyItem(id){ const it=ITEMS.find(x=>x.id===id); speak(it.en,0.9); if(!spend(it.p)){ document.getElementById('shop').querySelector(`button[onclick="buyItem('${id}')"]`).classList.add('shake'); setTimeout(()=>renderRoom(),500); return; } const o=owned(); o[id]={placed:true}; localStorage.setItem('pr_items',JSON.stringify(o)); confetti(16); chime(4); renderRoom(); }
 function toggleItem(id){ const o=owned(); if(!o[id]) return; o[id].placed=!o[id].placed; localStorage.setItem('pr_items',JSON.stringify(o)); const it=ITEMS.find(x=>x.id===id)||PETS.find(x=>x.id===id)||ROOMOBJ.find(x=>x.id===id); if(it) speak(it.en,0.9); renderRoom(); }

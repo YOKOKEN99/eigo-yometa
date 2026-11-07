@@ -5,3 +5,5 @@ img/<習ったセット番号 1〜9>/<段階>_<連番>.png  の形で置く。
 置いたら scratchpad/build_manifest.py を実行して manifest.json を作り直す（アプリはmanifestを読む）。
 同じ段階に何枚あってもよい。毎回ランダムに1枚出る（直前と同じ絵は避ける）。
 公開の置き場（GitHub）に上げると絵も公開になる。
+人間キャラ（女の子）の絵: img/kid/stand.png・throw.png・happy.png・walk.png（無ければ 👧 で代わりに出る）
+img/参考/ は上げない（作るときの見本用）
