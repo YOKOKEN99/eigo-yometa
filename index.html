@@ -1046,6 +1046,12 @@ function buyPet(id){ const pet=PETS.find(p=>p.id===id); speak(pet.en,0.9); if(!s
 /* --- おへや（おみせで買って かざる） --- */
 const ITEMS=[{id:'bed',e:'🛏️',en:'bed',ja:'ベッド',p:120},{id:'chair',e:'🪑',en:'chair',ja:'いす',p:80},{id:'lamp',e:'🪔',en:'lamp',ja:'ランプ',p:90},{id:'plant',e:'🪴',en:'plant',ja:'しょくぶつ',p:100},{id:'hat',e:'🎩',en:'hat',ja:'ぼうし',p:150},{id:'ribbon',e:'🎀',en:'ribbon',ja:'リボン',p:150},{id:'ball',e:'⚽',en:'ball',ja:'ボール',p:60},{id:'book',e:'📚',en:'book',ja:'ほん',p:70},{id:'cake',e:'🎂',en:'cake',ja:'ケーキ',p:200},{id:'star',e:'⭐',en:'star',ja:'ほし',p:250},{id:'clock',e:'⏰',en:'clock',ja:'とけい',p:110},{id:'fish',e:'🐟',en:'fish',ja:'さかな',p:130},{id:'car',e:'🚗',en:'car',ja:'くるま',p:300},{id:'rainbow',e:'🌈',en:'rainbow',ja:'にじ',p:500}];
 const owned=()=>JSON.parse(localStorage.getItem('pr_items')||'{}'); /* {id:{placed:true}} */
+/* 家具の置き場所（部屋の幅・高さに対する割合。y<0.5 は壁、それより下は床）。s＝大きさ(rem) */
+const ITEM_POS={
+  rainbow:{x:.50,y:.13,s:5.5}, star:{x:.30,y:.12,s:2.4}, clock:{x:.72,y:.13,s:2.6}, ribbon:{x:.62,y:.33,s:2.2}, hat:{x:.38,y:.33,s:2.4},
+  bed:{x:.40,y:.66,s:3.6}, chair:{x:.58,y:.64,s:3}, lamp:{x:.88,y:.48,s:3}, plant:{x:.08,y:.88,s:3},
+  cake:{x:.70,y:.64,s:2.6}, ball:{x:.48,y:.88,s:2.4}, book:{x:.62,y:.88,s:2.4}, fish:{x:.35,y:.88,s:2.6}, car:{x:.76,y:.90,s:2.6},
+};
 function openRoom(){ roomMode='room'; go('room'); renderRoom(); }
 /* --- 人間キャラ（img/kid/<ポーズ>.png があれば使う。無ければ 👧） と そと（公園）で「持ってこい」 --- */
 let roomMode='room'; let throwSel='ball';
@@ -1104,7 +1110,7 @@ function renderRoom(){
   const objsHtml=(pl('fridge')?`<div class="robj fridge" id="obj_fridge" onclick="openFridge()" title="fridge"></div>`:'')
     +(pl('bowl')?`<div class="robj bowl" id="obj_bowl" onclick="speak('bowl',0.9)" title="bowl">🥣</div>`:'')
     +(pl('petbed')?`<div class="robj petbed" id="obj_petbed" onclick="speak('pet bed',0.9)" title="pet bed"></div>`:'');
-  document.getElementById('roombox').innerHTML=`<div class="roomfloor">${Object.entries(o).filter(([id,v])=>v.placed&&ITEMS.find(x=>x.id===id)).map(([id])=>{const it=ITEMS.find(x=>x.id===id); return `<button class="roomitem" onclick="toggleItem('${id}')" title="${it.en}">${it.e}</button>`;}).join('')}${objsHtml}${kidHtml()}${petsHtml}</div>`;
+  document.getElementById('roombox').innerHTML=`<div class="roomfloor">${Object.entries(o).filter(([id,v])=>v.placed&&ITEMS.find(x=>x.id===id)).map(([id])=>{const it=ITEMS.find(x=>x.id===id); const ps=ITEM_POS[id]||{x:.5,y:.85,s:3}; return `<button class="roomitem" style="position:absolute; left:${ps.x*100}%; top:${ps.y*100}%; transform:translate(-50%,-50%); font-size:${ps.s}rem; z-index:2;" onclick="speak('${it.en}',0.9)" title="${it.en}">${it.e}</button>`;}).join('')}${objsHtml}${kidHtml()}${petsHtml}</div>`;
   renderShop(o);
   setTimeout(startPets,50);
 }
