@@ -1091,7 +1091,7 @@ function dispatchFetch(el,item,x,y){
   s.task='fetch'; s.pickup=el; s.item=item; s.rest=0; s.sp=6; s.tx=x-35; s.ty=y-55;
 }
 function renderRoom(){
-  const o=owned(); const animal=pickFrom(poolFor(S.level,1)); const park=roomMode==='park';
+  const o=owned(); const park=roomMode==='park';
   document.getElementById('parkBtn').textContent=park?'🏠 おへやに もどる':'🌳 そとで あそぶ';
   document.getElementById('roomHint').textContent=park?'したの ⚽ や えさを えらんで、くさの うえを さわると なげるよ。ペットが もってくるよ（Fetch!）':'おみせで かった ものを さわると おへやに おいたり しまったり できるよ';
   const petsHtml=PETS.filter(p=>o[p.id]&&o[p.id].placed).map(p=>{ const src=petImg(p); return src?`<img class="pet" data-id="${p.id}" src="${src}" onclick="pokePet('${p.id}');event.stopPropagation()" alt="${p.en}">`:`<div class="pet petemoji" data-id="${p.id}" onclick="pokePet('${p.id}');event.stopPropagation()">${p.e}</div>`; }).join('');
@@ -1104,7 +1104,7 @@ function renderRoom(){
   const objsHtml=(pl('fridge')?`<div class="robj fridge" id="obj_fridge" onclick="openFridge()" title="fridge"></div>`:'')
     +(pl('bowl')?`<div class="robj bowl" id="obj_bowl" onclick="speak('bowl',0.9)" title="bowl">🥣</div>`:'')
     +(pl('petbed')?`<div class="robj petbed" id="obj_petbed" onclick="speak('pet bed',0.9)" title="pet bed"></div>`:'');
-  document.getElementById('roombox').innerHTML=`<div class="roomfloor">${animal?`<img class="roomanimal" src="${animal}">`:'<div class="big-emoji">🐱</div>'}${Object.entries(o).filter(([id,v])=>v.placed&&ITEMS.find(x=>x.id===id)).map(([id])=>{const it=ITEMS.find(x=>x.id===id); return `<button class="roomitem" onclick="toggleItem('${id}')" title="${it.en}">${it.e}</button>`;}).join('')}${objsHtml}${kidHtml()}${petsHtml}</div>`;
+  document.getElementById('roombox').innerHTML=`<div class="roomfloor">${Object.entries(o).filter(([id,v])=>v.placed&&ITEMS.find(x=>x.id===id)).map(([id])=>{const it=ITEMS.find(x=>x.id===id); return `<button class="roomitem" onclick="toggleItem('${id}')" title="${it.en}">${it.e}</button>`;}).join('')}${objsHtml}${kidHtml()}${petsHtml}</div>`;
   renderShop(o);
   setTimeout(startPets,50);
 }
